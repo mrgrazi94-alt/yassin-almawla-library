@@ -564,3 +564,127 @@ document.addEventListener('change', function(e) {
 
     loadCustomerProfile();
 })();
+
+// === ENTERPRISE_JS_START ===
+window.addEventListener('DOMContentLoaded', function() {
+    // 1. تفعيل حساب الزبون وتعبئة السلة تلقائياً
+    const openBtn = document.getElementById('floatingCustBtn');
+    const overlay = document.getElementById('custAuthOverlay');
+    const closeBtn = document.getElementById('closeCustAuthBtn');
+    const form = document.getElementById('custProfileForm');
+    const logoutBtn = document.getElementById('cLogoutBtn');
+    const nameLabel = document.getElementById('floatingCustName');
+
+    function syncCustomer() {
+        const data = JSON.parse(localStorage.getItem('yassin_user_profile') || 'null');
+        if (data && data.name) {
+            nameLabel.textContent = 'أهلاً، ' + data.name.split(' ')[0];
+            document.getElementById('cName').value = data.name;
+            document.getElementById('cPhone').value = data.phone || '';
+            document.getElementById('cGov').value = data.gov || 'بغداد';
+            document.getElementById('cAddr').value = data.addr || '';
+            logoutBtn.style.display = 'block';
+
+            // ملء بيانات السلة تلقائياً
+            document.querySelectorAll('input').forEach(inp => {
+                const ph = (inp.placeholder || '').toLowerCase();
+                if ((ph.includes('الاسم') || inp.id.toLowerCase().includes('name')) && !inp.value && inp.id !== 'cName') inp.value = data.name;
+                if ((ph.includes('هاتف') || ph.includes('رقم') || inp.id.toLowerCase().includes('phone')) && !inp.value && inp.id !== 'cPhone') inp.value = data.phone;
+                if ((ph.includes('عنوان') || ph.includes('منطقة') || inp.id.toLowerCase().includes('address')) && !inp.value && inp.id !== 'cAddr') inp.value = data.addr;
+            });
+        } else {
+            nameLabel.textContent = 'دخول / حساب';
+            logoutBtn.style.display = 'none';
+        }
+    }
+
+    openBtn?.addEventListener('click', () => { syncCustomer(); overlay.style.display = 'flex'; });
+    closeBtn?.addEventListener('click', () => { overlay.style.display = 'none'; });
+    form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const profile = {
+            name: document.getElementById('cName').value.trim(),
+            phone: document.getElementById('cPhone').value.trim(),
+            gov: document.getElementById('cGov').value,
+            addr: document.getElementById('cAddr').value.trim()
+        };
+        localStorage.setItem('yassin_user_profile', JSON.stringify(profile));
+        syncCustomer();
+        overlay.style.display = 'none';
+        alert('✅ تم حفظ حسابك بنجاح!');
+    });
+    logoutBtn?.addEventListener('click', () => {
+        localStorage.removeItem('yassin_user_profile');
+        form.reset();
+        syncCustomer();
+        overlay.style.display = 'none';
+    });
+
+    // 2. مراقبة السلة وتحديث الشريط الثابت أسفل الشاشة تلقائياً
+    const bottomBar = document.getElementById('bottomCartBar');
+    const bottomCount = document.getElementById('bottomCartCount');
+    const bottomTotal = document.getElementById('bottomCartTotal');
+    const bottomOpenBtn = document.getElementById('bottomCartOpenBtn');
+
+    bottomOpenBtn?.addEventListener('click', () => {
+        syncCustomer();
+        const cartTrigger = document.getElementById('cartBtn') || document.querySelector('[id*="cart"], .cart-btn');
+        if (cartTrigger) cartTrigger.click();
+    });
+
+    setInterval(() => {
+        const countEl = document.getElementById('cartCount') || document.querySelector('.cart-badge, .badge');
+        const totalEl = document.getElementById('cartTotal') || document.querySelector('[id*="total"]');
+        const qty = countEl ? parseInt(countEl.textContent.replace(/\D/g, '') || '0', 10) : 0;
+        if (qty > 0) {
+            bottomBar.style.display = 'flex';
+            bottomCount.textContent = qty;
+            if (totalEl) bottomTotal.textContent = totalEl.textContent;
+        } else {
+            bottomBar.style.display = 'none';
+        }
+    }, 400);
+
+    // 3. حقن أدوات الإدارة (صور متعددة + ألوان + تبديل متوفر/نافذ) تلقائياً عند فتح لوحة الإدارة
+    const adminObserver = new MutationObserver(() => {
+        const adminInputs = Array.from(document.querySelectorAll('input'));
+        const imgInput = adminInputs.find(i => (i.placeholder || '').includes('صورة') || (i.id || '').toLowerCase().includes('img'));
+        if (imgInput && !document.getElementById('multiImgUploadBox')) {
+            const box = document.createElement('div');
+            box.id = 'multiImgUploadBox';
+            box.style.cssText = 'margin:8px 0;padding:10px;background:#f8fafc;border:1px dashed #f25011;border-radius:10px;font-size:0.85rem;';
+            box.innerHTML = '<label style="cursor:pointer;font-weight:700;color:#0f172a;display:block;"><i class="fas fa-images" style="color:#f25011;"></i> اختيار صورة أو أكثر من جهازك (ضغط تلقائي): <input type="file" id="adminMultiFiles" accept="image/*" multiple style="margin-top:6px;display:block;"></label>';
+            imgInput.parentNode.insertBefore(box, imgInput.nextSibling);
+
+            document.getElementById('adminMultiFiles').addEventListener('change', async function(ev) {
+                const files = Array.from(ev.target.files || []);
+                if (!files.length) return;
+                const results = [];
+                for (const f of files) {
+                    const b64 = await new Promise(res => {
+                        const r = new FileReader();
+                        r.onload = e => {
+                            const im = new Image();
+                            im.onload = () => {
+                                const c = document.createElement('canvas');
+                                const s = im.width > 420 ? (420 / im.width) : 1;
+                                c.width = im.width * s; c.height = im.height * s;
+                                c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+                                res(c.toDataURL('image/jpeg', 0.72));
+                            };
+                            im.src = e.target.result;
+                        };
+                        r.readAsDataURL(f);
+                    });
+                    results.push(b64);
+                }
+                imgInput.value = results.join(' | ');
+                alert('✅ تم ضغط وتجهيز ' + results.length + ' صورة بنجاح!');
+            });
+        }
+    });
+    adminObserver.observe(document.body, { childList: true, subtree: true });
+
+    syncCustomer();
+});
+// === ENTERPRISE_JS_END ===
