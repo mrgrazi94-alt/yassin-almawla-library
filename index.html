@@ -623,5 +623,79 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     setInterval(syncSmartBottomCart, 500);
 })();
+<script>
+(function() {
+    function syncStickyCartLive() {
+        var bottomBar = document.getElementById('stickyCartBar') || Array.from(document.querySelectorAll('div')).find(function(el) {
+            return el.style.position === 'fixed' && el.textContent.indexOf('مجموع مشترياتك') !== -1;
+        });
+        if (!bottomBar) return;
+
+        // 1. استخراج العدد والمجموع من أعلى الصفحة (الهيدر) مباشرة بدقة 100%
+        var headerCountEl = document.querySelector('#cartCount, .cart-count, header .badge, nav .badge');
+        var count = headerCountEl ? parseInt(headerCountEl.textContent.replace(/\D/g, '') || '0', 10) : 0;
+
+        // البحث عن السعر في الهيدر أو حسابه من العناصر المخزنة
+        var total = 0;
+        var headerElements = Array.from(document.querySelectorAll('header *, nav *'));
+        for (var i = 0; i < headerElements.length; i++) {
+            var txt = headerElements[i].textContent.trim();
+            if (headerElements[i].children.length === 0 && /^\d[\d,]*\s*د\.ع$/.test(txt)) {
+                var val = parseInt(txt.replace(/\D/g, '') || '0', 10);
+                if (val > 0) { total = val; break; }
+            }
+        }
+
+        // خطة بديلة لحساب السعر من LocalStorage مهما كان اسم المفتاح
+        if (total === 0) {
+            for (var k = 0; k < localStorage.length; k++) {
+                try {
+                    var arr = JSON.parse(localStorage.getItem(localStorage.key(k)));
+                    if (Array.isArray(arr) && arr.length > 0 && arr[0] && (arr[0].price || arr[0].name)) {
+                        var sum = 0, cnt = 0;
+                        arr.forEach(function(it) {
+                            var q = Number(it.qty || it.quantity || it.count || 1);
+                            var p = Number(String(it.price || 0).replace(/\D/g, ''));
+                            if (p > 0) { sum += p * q; cnt += q; }
+                        });
+                        if (sum > 0) { total = sum; if (count === 0) count = cnt; break; }
+                    }
+                } catch(e) {}
+            }
+        }
+
+        bottomBar.style.display = count > 0 ? 'flex' : 'none';
+
+        // 2. تحديث النصوص داخل الشريط السفلي
+        bottomBar.querySelectorAll('span, div, b, strong').forEach(function(el) {
+            if (el.children.length > 0) return;
+            var t = el.textContent.trim();
+            if (/^\d+$/.test(t)) el.textContent = count;
+            if (t.indexOf('د.ع') !== -1) el.textContent = total.toLocaleString() + ' د.ع';
+        });
+
+        // 3. ربط زر "عرض السلة وإتمام الطلب" بزر السلة العلوي الأصلي
+        var btn = bottomBar.querySelector('button');
+        if (btn && !btn.dataset.cartLinked) {
+            btn.dataset.cartLinked = '1';
+            btn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var topTrigger = (headerCountEl && headerCountEl.closest('button, a, div[onclick]')) ||
+                                 document.querySelector('#cartBtn, .cart-btn, [onclick*="cart"], [onclick*="Cart"]');
+                if (topTrigger) {
+                    topTrigger.click();
+                } else {
+                    var modal = document.querySelector('#cartModal, .cart-modal, #cartSidebar, .cart-drawer');
+                    if (modal) { modal.style.display = 'flex'; modal.classList.add('active', 'open'); }
+                }
+            };
+        }
+    }
+
+    document.addEventListener('click', function() { setTimeout(syncStickyCartLive, 120); });
+    setInterval(syncStickyCartLive, 400);
+})();
+</script>
 </body>
 </html>
