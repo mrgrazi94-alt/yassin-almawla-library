@@ -688,3 +688,122 @@ window.addEventListener('DOMContentLoaded', function() {
     syncCustomer();
 });
 // === ENTERPRISE_JS_END ===
+
+// === ADMIN_ADVANCED_START ===
+window.addEventListener('DOMContentLoaded', function() {
+    // مراقبة لوحة الإدارة وحقن أدوات التحكم المتقدمة (تعديل + ألوان + متوفر/نافذ)
+    const observer = new MutationObserver(() => {
+        const adminSection = document.getElementById('adminDashboardSection') || document.querySelector('[id*="admin"]');
+        if (!adminSection) return;
+
+        // 1. حقن حقل الألوان المتوفرة في نموذج إضافة/تعديل المنتج إذا لم يكن موجوداً
+        const descInput = Array.from(adminSection.querySelectorAll('input, textarea')).find(el =>
+            (el.placeholder || '').includes('وصف') || (el.id || '').toLowerCase().includes('desc')
+        );
+        if (descInput && !document.getElementById('adminColorsInput')) {
+            const colorDiv = document.createElement('div');
+            colorDiv.style.cssText = 'margin:8px 0;';
+            colorDiv.innerHTML = '<input type="text" id="adminColorsInput" placeholder="الألوان أو الخيارات المتوفرة (افصل بينها بفاصلة، مثال: أزرق، أسود، أحمر)" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;font-size:0.9rem;">';
+            descInput.parentNode.insertBefore(colorDiv, descInput.nextSibling);
+        }
+
+        // 2. إضافة لوحة إدارة سريعة للمنتجات الحالية (تعديل + زر متوفر/نافذ)
+        if (!document.getElementById('quickInventoryManager')) {
+            const managerBox = document.createElement('div');
+            managerBox.id = 'quickInventoryManager';
+            managerBox.style.cssText = 'margin-top:20px;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;';
+            managerBox.innerHTML = 
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                    <h4 style="margin:0;color:#0f172a;"><i class="fas fa-sliders-h" style="color:#f25011;"></i> إدارة المخزون السريعة (تعديل التفاصيل / متوفر أو نافذ)</h4>
+                    <button type="button" id="refreshQuickInvBtn" style="background:#0f172a;color:#fff;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.82rem;">تحديث القائمة</button>
+                </div>
+                <div id="quickInvList" style="display:flex;flex-direction:column;gap:10px;"></div>
+            ;
+            adminSection.appendChild(managerBox);
+
+            window.renderQuickInventory = function() {
+                const listEl = document.getElementById('quickInvList');
+                if (!listEl) return;
+                // قراءة المنتجات من الذاكرة أو من المتغير العام
+                let prods = [];
+                try {
+                    prods = JSON.parse(localStorage.getItem('yassin_products') || localStorage.getItem('products') || '[]');
+                } catch(e) {}
+                if ((!prods || !prods.length) && typeof products !== 'undefined') prods = products;
+
+                if (!prods || !prods.length) {
+                    listEl.innerHTML = '<div style="color:#64748b;font-size:0.85rem;">اضغط "تحديث القائمة" لعرض المنتجات الحالية وتعديلها.</div>';
+                    return;
+                }
+
+                listEl.innerHTML = prods.map((p, idx) => {
+                    const isOut = Boolean(p.outOfStock);
+                    const colorsText = Array.isArray(p.variants) ? p.variants.join('، ') : (p.variants || 'لا توجد ألوان محددة');
+                    return 
+                        <div style="background:#fff;padding:12px;border-radius:10px;border:1px solid #cbd5e1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                            <div style="flex:1;min-width:200px;">
+                                <div style="font-weight:800;color:#0f172a;"> <span style="color:#f25011;font-size:0.85rem;">( د.ع)</span></div>
+                                <div style="font-size:0.8rem;color:#475569;margin-top:3px;">الألوان/الخيارات: <b></b></div>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <button type="button" onclick="toggleProductStock()" style="background:;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.82rem;">
+                                    
+                                </button>
+                                <button type="button" onclick="editProductDetails()" style="background:#2563eb;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.82rem;">
+                                    <i class="fas fa-edit"></i> تعديل
+                                </button>
+                            </div>
+                        </div>
+                    ;
+                }).join('');
+            };
+
+            window.toggleProductStock = function(idx) {
+                let key = localStorage.getItem('yassin_products') ? 'yassin_products' : 'products';
+                let prods = JSON.parse(localStorage.getItem(key) || '[]');
+                if (!prods.length && typeof products !== 'undefined') prods = products;
+                if (!prods[idx]) return;
+                prods[idx].outOfStock = !prods[idx].outOfStock;
+                localStorage.setItem(key, JSON.stringify(prods));
+                if (typeof products !== 'undefined') products = prods;
+                if (typeof renderProducts === 'function') renderProducts();
+                window.renderQuickInventory();
+            };
+
+            window.editProductDetails = function(idx) {
+                let key = localStorage.getItem('yassin_products') ? 'yassin_products' : 'products';
+                let prods = JSON.parse(localStorage.getItem(key) || '[]');
+                if (!prods.length && typeof products !== 'undefined') prods = products;
+                const p = prods[idx];
+                if (!p) return;
+
+                const newName = prompt('تعديل اسم المنتج:', p.name);
+                if (newName === null) return;
+                const newPrice = prompt('تعديل السعر (بالدينار العراقي):', p.price);
+                if (newPrice === null) return;
+                const currentColors = Array.isArray(p.variants) ? p.variants.join('، ') : '';
+                const newColors = prompt('الألوان أو الخيارات المتوفرة (افصل بينها بفاصلة مثل: أزرق، أسود، أحمر):', currentColors);
+                if (newColors === null) return;
+                const newDesc = prompt('تعديل وصف المنتج:', p.desc || '');
+                if (newDesc === null) return;
+
+                p.name = newName.trim() || p.name;
+                p.price = Number(newPrice) || p.price;
+                p.variants = newColors.split(/[,،]/).map(s => s.trim()).filter(Boolean);
+                p.desc = newDesc.trim();
+
+                prods[idx] = p;
+                localStorage.setItem(key, JSON.stringify(prods));
+                if (typeof products !== 'undefined') products = prods;
+                if (typeof renderProducts === 'function') renderProducts();
+                window.renderQuickInventory();
+                alert('✅ تم تحديث تفاصيل وألوان المنتج بنجاح! لا تنسَ نسخ الكود وتحديث products.json على GitHub ليظهر لجميع الزبائن.');
+            };
+
+            document.getElementById('refreshQuickInvBtn')?.addEventListener('click', window.renderQuickInventory);
+            setTimeout(window.renderQuickInventory, 400);
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+// === ADMIN_ADVANCED_END ===
