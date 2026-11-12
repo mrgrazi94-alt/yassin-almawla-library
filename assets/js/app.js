@@ -415,3 +415,32 @@ async function initStore() {
     updateCartUI();
 }
 initStore();
+
+// ميزة رفع وضغط الصور مباشرة من الجهاز داخل لوحة الإدارة
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'prodImgFile') {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const maxWidth = 450;
+                const scale = img.width > maxWidth ? (maxWidth / img.width) : 1;
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                const urlInput = document.querySelector('#adminDashboardSection input[placeholder*="صورة"], #prodImg');
+                if (urlInput) {
+                    urlInput.value = compressedBase64;
+                    alert('✅ تم ضغط الصورة وتجهيزها بنجاح! اضغط الآن على زر إضافة المنتج.');
+                }
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
