@@ -524,5 +524,18 @@
 <!-- === ENTERPRISE_UPGRADE_END === -->
 <script src="assets/js/pro-features.js?v=100"></script>
 <script src="assets/js/pro-features.js?v=200"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var lockBtn = document.getElementById('adminLoginBtn') || document.querySelector('[id*="admin"], .admin-btn, .fa-lock');
+    if (lockBtn) {
+        var clickable = lockBtn.closest('button, a') || lockBtn;
+        clickable.onclick = function(e) {
+            e.preventDefault();
+            window.location.href = 'admin.html';
+        };
+    }
+});
+</script>
+</body>
 </body>
 </html>

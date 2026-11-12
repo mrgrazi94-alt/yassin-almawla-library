@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز الإدارة المتكامل | مكتبة ياسين المولى</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1120;
+            --card: #111827;
+            --surface: #1e293b;
+            --border: #334155;
+            --primary: #f25011;
+            --primary-hover: #d94106;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --info: #38bdf8;
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); }
+        
+        /* شاشة تسجيل الدخول */
+        #loginScreen {
+            position: fixed; inset: 0; background: radial-gradient(circle at top, #1e293b, #0b1120);
+            display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 9999;
+        }
+        .login-box {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+            padding: 32px; width: 100%; max-width: 400px; text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .login-box input {
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border);
+            background: var(--surface); color: #fff; font-size: 1.1rem; text-align: center;
+            margin: 16px 0; outline: none;
+        }
+        .login-box input:focus { border-color: var(--primary); }
+        
+        /* الهيكل الرئيسي للوحة الإدارة */
+        .topbar {
+            background: var(--card); border-bottom: 1px solid var(--border);
+            padding: 14px 24px; display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 12px; position: sticky; top: 0; z-index: 100;
+        }
+        .layout { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 73px); }
+        .sidebar {
+            background: var(--card); border-left: 1px solid var(--border);
+            padding: 20px 14px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .nav-btn {
+            background: transparent; color: var(--muted); border: none; padding: 12px 16px;
+            border-radius: 12px; text-align: right; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px;
+        }
+        .nav-btn:hover, .nav-btn.active { background: var(--primary); color: #fff; }
+        .main-content { padding: 24px; max-width: 1200px; width: 100%; margin: 0 auto; }
+        
+        /* البطاقات والحقول */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 16px; }
+        .stat-val { font-size: 1.9rem; font-weight: 900; margin-top: 6px; }
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        input, select, textarea {
+            width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
+            background: var(--surface); color: #fff; font-size: 0.9rem; outline: none;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        .btn {
+            background: var(--primary); color: #fff; border: none; padding: 11px 18px;
+            border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: 0.2s;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); }
+        .btn-info { background: #0284c7; }
+        .btn-danger { background: var(--danger); }
+        .btn-dark { background: var(--surface); border: 1px solid var(--border); }
+        
+        .item-row {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 12px 16px; display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;
+        }
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        @media (max-width: 820px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { flex-direction: row; overflow-x: auto; border-left: none; border-bottom: 1px solid var(--border); }
+            .nav-btn { white-space: nowrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة القفل والحماية -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <div style="font-size:3rem;margin-bottom:8px;">🔐</div>
+            <h2 style="margin:0;font-size:1.4rem;">إدارة مكتبة ياسين المولى</h2>
+            <p style="color:var(--muted);font-size:0.88rem;margin:6px 0 0;">أدخل الرمز السري للوصول إلى مركز القيادة</p>
+            <input type="password" id="adminPassInput" placeholder="••••••••" onkeypress="if(event.key==='Enter') checkAdminLogin()">
+            <button class="btn" style="width:100%;font-size:1rem;" onclick="checkAdminLogin()">دخول إلى لوحة الإدارة</button>
+            <div style="margin-top:14px;">
+                <a href="index.html" style="color:var(--info);text-decoration:none;font-size:0.85rem;">← العودة إلى واجهة المتجر</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- الشريط العلوي -->
+    <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div style="background:var(--primary);width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">👑</div>
+            <div>
+                <div style="font-weight:900;font-size:1.15rem;">مركز إدارة مكتبة ياسين المولى</div>
+                <div style="font-size:0.78rem;color:var(--muted);">نظام التحكم الشامل بالمخزون، الزبائن، الطلبات، والتسويق</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-success" onclick="copyProductsJson()">📋 نسخ كود المنتجات المحدث (GitHub)</button>
+            <a href="index.html" class="btn btn-dark" style="text-decoration:none;">🏪 معاينة المتجر</a>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- القائمة الجانبية -->
+        <aside class="sidebar">
+            <button class="nav-btn active" onclick="switchTab('productsTab', this)">📦 المنتجات والمخزون</button>
+            <button class="nav-btn" onclick="switchTab('ordersTab', this)">🛒 سجل الطلبات والزبائن</button>
+            <button class="nav-btn" onclick="switchTab('shippingTab', this)">🏷️ بوليصة الشحن والتوصيل</button>
+            <button class="nav-btn" onclick="switchTab('marketingTab', this)">📸 التسويق والكوبونات</button>
+            <button class="nav-btn" onclick="switchTab('backupTab', this)">💾 النسخ الاحتياطي والجرد</button>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="main-content">
+            <!-- شريط الإحصائيات -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div style="color:var(--muted);font-size:0.85rem;">إجمالي المنتجات</div>
+                    <div class="stat-val" id="stTotal">0</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color:var(--muted);font-size:0.85rem;">المتوفر حالياً</div>
+                    <div class="stat-val" style="color:var(--success);" id="stAvail">0</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color:var(--muted);font-size:0.85rem;">نافذ الكمية</div>
+                    <div class="stat-val" style="color:var(--danger);" id="stOut">0</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color:var(--muted);font-size:0.85rem;">الطلبات المسجلة</div>
+                    <div class="stat-val" style="color:var(--info);" id="stOrders">0</div>
+                </div>
+            </div>
+
+            <!-- 1. تبويب إدارة المنتجات -->
+            <div id="productsTab" class="tab-pane active">
+                <div class="panel">
+                    <h3 id="prodFormHeading" style="margin:0 0 16px;color:var(--primary);">➕ إضافة منتج / ملزمة جديدة</h3>
+                    <input type="hidden" id="editProdIdx" value="-1">
+                    <div class="form-grid" style="margin-bottom:12px;">
+                        <input type="text" id="pName" placeholder="اسم المنتج أو الملزمة *">
+                        <input type="number" id="pPrice" placeholder="السعر الحالي (د.ع) *">
+                        <input type="number" id="pOldPrice" placeholder="السعر قبل الخصم (اختياري)">
+                        <select id="pCat">
+                            <option value="ملازم دراسية">ملازم دراسية</option>
+                            <option value="قرطاسية">قرطاسية</option>
+                            <option value="مستلزمات مدرسية">مستلزمات مدرسية</option>
+                            <option value="مستلزمات مكتبية">مستلزمات مكتبية</option>
+                            <option value="مستلزمات الرسم">مستلزمات الرسم</option>
+                            <option value="حقائب">حقائب</option>
+                            <option value="هدايا">هدايا</option>
+                        </select>
+                    </div>
+                    <div class="form-grid" style="margin-bottom:12px;">
+                        <input type="text" id="pColors" placeholder="الألوان أو الخيارات (مثال: أزرق، أسود، أحمر)">
+                        <input type="text" id="pImgUrl" placeholder="رابط الصورة أو ارفعها من الزر المجاور">
+                        <input type="file" id="pFileInput" accept="image/*" onchange="compressProductImg(event)">
+                    </div>
+                    <textarea id="pDesc" rows="2" placeholder="وصف وتفاصيل المنتج (اسم الأستاذ، الصف، عدد الصفحات...)" style="margin-bottom:12px;"></textarea>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn" onclick="saveProduct()">💾 حفظ المنتج</button>
+                        <button class="btn btn-dark" id="cancelEditBtn" style="display:none;" onclick="resetProdForm()">إلغاء التعديل</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+                        <h3 style="margin:0;">📋 جميع المنتجات في المتجر</h3>
+                        <input type="text" id="prodSearch" placeholder="🔍 ابحث بالاسم أو القسم..." style="max-width:280px;" oninput="renderProductsAdmin()">
+                    </div>
+                    <div id="adminProductsContainer"></div>
+                </div>
+            </div>
+
+            <!-- 2. تبويب سجل الطلبات والزبائن -->
+            <div id="ordersTab" class="tab-pane">
+                <div class="panel">
+                    <h3 style="margin:0 0 16px;color:var(--info);">➕ تسجيل طلب جديد لزبون</h3>
+                    <div class="form-grid" style="margin-bottom:12px;">
+                        <input type="text" id="oName" placeholder="اسم الزبون الكامل *">
+                        <input type="text" id="oPhone" placeholder="رقم الهاتف (07xxxxxxxxx) *">
+                        <input type="text" id="oAddr" placeholder="المحافظة والمنطقة">
+                        <input type="number" id="oTotal" placeholder="المبلغ الإجمالي شامل التوصيل (د.ع)">
+                    </div>
+                    <textarea id="oItems" rows="2" placeholder="تفاصيل الملازم والمنتجات المطلوبة..." style="margin-bottom:12px;"></textarea>
+                    <button class="btn btn-info" onclick="saveOrder()">💾 حفظ الطلب في السجل</button>
+                </div>
+
+                <div class="panel">
+                    <h3 style="margin:0 0 16px;">🗂️ سجل الطلبات وبيانات الزبائن</h3>
+                    <div id="adminOrdersContainer"></div>
+                </div>
+            </div>
+
+            <!-- 3. تبويب بوليصة الشحن -->
+            <div id="shippingTab" class="tab-pane">
+                <div class="panel" style="max-width:540px;">
+                    <h3 style="margin:0 0 14px;color:#fbbf24;">🏷️ طباعة ملصق التوصيل الحراري (Waybill)</h3>
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                        <input type="text" id="wName" placeholder="اسم المستلم">
+                        <input type="text" id="wPhone" placeholder="رقم هاتف المستلم">
+                        <input type="text" id="wAddr" placeholder="المحافظة والمنطقة ونقطة دالة">
+                        <input type="number" id="wAmount" placeholder="المبلغ المطلوب استلامه (د.ع)">
+                        <textarea id="wNotes" rows="2" placeholder="ملاحظات للمندوب (مثال: قابل للكسر / الاتصال قبل الوصول)"></textarea>
+                        <button class="btn" onclick="printWaybill()">🖨️ معاينة وطباعة وصل الشحن الآن</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. تبويب التسويق والكوبونات -->
+            <div id="marketingTab" class="tab-pane">
+                <div class="form-grid">
+                    <div class="panel">
+                        <h3 style="margin:0 0 14px;color:var(--primary);">📸 صانع بطاقة إعلان ستوري (Instagram / Telegram)</h3>
+                        <div style="display:flex;flex-direction:column;gap:12px;">
+                            <input type="text" id="sTitle" placeholder="اسم الملزمة أو العرض (مثال: ملزمة الكيمياء 2026)">
+                            <input type="text" id="sSub" placeholder="اسم الأستاذ أو تفاصيل إضافية">
+                            <input type="text" id="sPrice" placeholder="السعر (مثال: 12,000 د.ع)">
+                            <button class="btn" onclick="generateStoryImage()">✨ تصميم وتحميل صورة الستوري</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3 style="margin:0 0 14px;color:var(--success);">🎟️ مولّد رسائل العروض للواتساب والتيليغرام</h3>
+                        <div style="display:flex;flex-direction:column;gap:12px;">
+                            <input type="text" id="msgOfferTitle" placeholder="عنوان العرض (مثال: وصول الدفعة الجديدة من الملازم)">
+                            <textarea id="msgOfferBody" rows="3" placeholder="اكتب تفاصيل العرض هنا..."></textarea>
+                            <button class="btn btn-success" onclick="copyMarketingPost()">📋 نسخ منشور إعلاني جاهز للقنوات</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. تبويب النسخ الاحتياطي والجرد -->
+            <div id="backupTab" class="tab-pane">
+                <div class="panel">
+                    <h3 style="margin:0 0 12px;">💾 إدارة البيانات والجرد والنسخ الاحتياطي</h3>
+                    <p style="color:var(--muted);font-size:0.9rem;">يمكنك تصدير جميع منتجاتك وأسعارك كملف Excel لمتابعة الجرد، أو أخذ نسخة احتياطية كاملة واستعادتها في أي وقت.</p>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
+                        <button class="btn btn-success" onclick="exportExcelCsv()">📊 تصدير جرد المنتجات (Excel / CSV)</button>
+                        <button class="btn btn-info" onclick="downloadJsonBackup()">📥 تحميل نسخة احتياطية (JSON)</button>
+                        <label class="btn btn-dark" style="cursor:pointer;">
+                            📤 استعادة نسخة احتياطية (JSON)
+                            <input type="file" accept=".json" style="display:none;" onchange="restoreJsonBackup(event)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const ADMIN_SECRET = 'admin2026';
+
+        // التحقق من تسجيل الدخول
+        function checkAdminLogin() {
+            const val = document.getElementById('adminPassInput').value;
+            if (val === ADMIN_SECRET) {
+                sessionStorage.setItem('ym_admin_auth', '1');
+                document.getElementById('loginScreen').style.display = 'none';
+                initAdminData();
+            } else {
+                alert('❌ رمز الدخول غير صحيح!');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('ym_admin_auth') === '1') {
+                document.getElementById('loginScreen').style.display = 'none';
+                initAdminData();
+            }
+        });
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // جلب المنتجات من LocalStorage أو من ملف data/products.json إذا كانت الذاكرة فارغة
+        async function initAdminData() {
+            let prods = getProducts();
+            if (!prods.length) {
+                try {
+                    const res = await fetch('data/products.json?v=' + Date.now());
+                    if (res.ok) {
+                        prods = await res.json();
+                        saveProducts(prods, false);
+                    }
+                } catch (e) {}
+            }
+            renderProductsAdmin();
+            renderOrdersAdmin();
+        }
+
+        function getProducts() {
+            try {
+                return JSON.parse(localStorage.getItem('yassin_products') || localStorage.getItem('products') || '[]');
+            } catch (e) { return []; }
+        }
+
+        function saveProducts(arr, rerender = true) {
+            localStorage.setItem('yassin_products', JSON.stringify(arr));
+            localStorage.setItem('products', JSON.stringify(arr));
+            if (rerender) renderProductsAdmin();
+        }
+
+        function updateStats() {
+            const prods = getProducts();
+            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
+            document.getElementById('stTotal').textContent = prods.length;
+            document.getElementById('stAvail').textContent = prods.filter(p => !p.outOfStock).length;
+            document.getElementById('stOut').textContent = prods.filter(p => p.outOfStock).length;
+            document.getElementById('stOrders').textContent = orders.length;
+        }
+
+        function renderProductsAdmin() {
+            updateStats();
+            const prods = getProducts();
+            const q = (document.getElementById('prodSearch').value || '').trim().toLowerCase();
+            const container = document.getElementById('adminProductsContainer');
+
+            const filtered = prods.map((p, idx) => ({ p, idx })).filter(x =>
+                !q || (x.p.name || '').toLowerCase().includes(q) || (x.p.category || '').toLowerCase().includes(q)
+            );
+
+            container.innerHTML = filtered.length ? filtered.map(({ p, idx }) => {
+                const isOut = Boolean(p.outOfStock);
+                const colors = Array.isArray(p.variants) && p.variants.length ? p.variants.join('، ') : 'بدون ألوان';
+                return `
+                    <div class="item-row">
+                        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:220px;">
+                            <img src="${p.img || p.image || 'assets/images/logo.jpg'}" style="width:54px;height:54px;border-radius:10px;object-fit:cover;background:#0f172a;">
+                            <div>
+                                <div style="font-weight:800;font-size:1rem;">${p.name}</div>
+                                <div style="font-size:0.82rem;color:#fbbf24;font-weight:700;">
+                                    ${Number(p.price).toLocaleString()} د.ع
+                                    <span style="color:var(--muted);font-weight:400;"> | ${p.category || ''} | الألوان: ${colors}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="btn ${isOut ? 'btn-danger' : 'btn-success'}" style="padding:7px 12px;font-size:0.8rem;" onclick="toggleStock(${idx})">
+                                ${isOut ? '❌ نافذ (اضغط للتوفير)' : '✅ متوفر (اضغط للنفاد)'}
+                            </button>
+                            <button class="btn btn-info" style="padding:7px 12px;font-size:0.8rem;" onclick="editProduct(${idx})">✏️ تعديل</button>
+                            <button class="btn btn-dark" style="padding:7px 12px;font-size:0.8rem;" onclick="deleteProduct(${idx})">🗑️ حذف</button>
+                        </div>
+                    </div>
+                `;
+            }).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد منتجات حالياً. أضف منتجك الأول من النموذج أعلاه!</div>';
+        }
+
+        function compressProductImg(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const scale = Math.min(1, 550 / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    document.getElementById('pImgUrl').value = canvas.toDataURL('image/jpeg', 0.78);
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('pName').value.trim();
+            const price = Number(document.getElementById('pPrice').value || 0);
+            if (!name || price <= 0) { alert('يرجى إدخال اسم المنتج والسعر الصحيح'); return; }
+
+            const oldPrice = Number(document.getElementById('pOldPrice').value || 0);
+            const category = document.getElementById('pCat').value;
+            const variants = document.getElementById('pColors').value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
+            const desc = document.getElementById('pDesc').value.trim();
+            const img = document.getElementById('pImgUrl').value.trim() || 'assets/images/logo.jpg';
+
+            const prods = getProducts();
+            const idx = parseInt(document.getElementById('editProdIdx').value, 10);
+
+            const obj = {
+                id: idx >= 0 && prods[idx] ? prods[idx].id : Date.now(),
+                name, price,
+                oldPrice: oldPrice > price ? oldPrice : null,
+                category, variants, desc,
+                img, image: img,
+                outOfStock: idx >= 0 && prods[idx] ? Boolean(prods[idx].outOfStock) : false
+            };
+
+            if (idx >= 0) prods[idx] = obj;
+            else prods.unshift(obj);
+
+            saveProducts(prods);
+            resetProdForm();
+            alert('✅ تم حفظ المنتج بنجاح! لا تنسَ الضغط على زر "نسخ كود المنتجات المحدث" في الأعلى ولصقه في data/products.json على GitHub ليظهر لجميع الزبائن.');
+        }
+
+        function editProduct(idx) {
+            const p = getProducts()[idx];
+            if (!p) return;
+            document.getElementById('editProdIdx').value = idx;
+            document.getElementById('prodFormHeading').textContent = '✏️ تعديل المنتج: ' + p.name;
+            document.getElementById('pName').value = p.name || '';
+            document.getElementById('pPrice').value = p.price || '';
+            document.getElementById('pOldPrice').value = p.oldPrice || '';
+            document.getElementById('pCat').value = p.category || 'ملازم دراسية';
+            document.getElementById('pColors').value = Array.isArray(p.variants) ? p.variants.join('، ') : '';
+            document.getElementById('pDesc').value = p.desc || '';
+            document.getElementById('pImgUrl').value = p.img || p.image || '';
+            document.getElementById('cancelEditBtn').style.display = 'inline-block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetProdForm() {
+            document.getElementById('editProdIdx').value = '-1';
+            document.getElementById('prodFormHeading').textContent = '➕ إضافة منتج / ملزمة جديدة';
+            ['pName','pPrice','pOldPrice','pColors','pDesc','pImgUrl','pFileInput'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('cancelEditBtn').style.display = 'none';
+        }
+
+        function toggleStock(idx) {
+            const prods = getProducts();
+            if (!prods[idx]) return;
+            prods[idx].outOfStock = !prods[idx].outOfStock;
+            saveProducts(prods);
+        }
+
+        function deleteProduct(idx) {
+            if (!confirm('هل أنت متأكد من حذف هذا المنتج نهائياً؟')) return;
+            const prods = getProducts();
+            prods.splice(idx, 1);
+            saveProducts(prods);
+        }
+
+        function copyProductsJson() {
+            const json = JSON.stringify(getProducts(), null, 2);
+            navigator.clipboard.writeText(json).then(() => {
+                alert('✅ تم نسخ كود جميع المنتجات!\nالآن افتح ملف data/products.json في GitHub، امسح محتواه القديم والصق هذا الكود ثم اضغط Commit changes.');
+            });
+        }
+
+        // إدارة الطلبات والزبائن
+        function saveOrder() {
+            const name = document.getElementById('oName').value.trim();
+            const phone = document.getElementById('oPhone').value.trim();
+            if (!name || !phone) { alert('يرجى إدخال اسم الزبون ورقمه'); return; }
+            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
+            orders.unshift({
+                id: 'YM-' + Math.floor(1000 + Math.random() * 9000),
+                name, phone,
+                addr: document.getElementById('oAddr').value.trim(),
+                total: Number(document.getElementById('oTotal').value || 0),
+                items: document.getElementById('oItems').value.trim(),
+                date: new Date().toLocaleDateString('ar-IQ')
+            });
+            localStorage.setItem('ym_admin_orders', JSON.stringify(orders));
+            ['oName','oPhone','oAddr','oTotal','oItems'].forEach(id => document.getElementById(id).value = '');
+            renderOrdersAdmin();
+        }
+
+        function renderOrdersAdmin() {
+            updateStats();
+            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
+            const container = document.getElementById('adminOrdersContainer');
+            container.innerHTML = orders.length ? orders.map((o, i) => `
+                <div class="item-row">
+                    <div>
+                        <div style="font-weight:800;">👤 ${o.name} <span style="color:var(--info);font-size:0.85rem;">(${o.phone})</span> <span class="badge" style="background:#334155;">${o.id}</span></div>
+                        <div style="font-size:0.84rem;color:#cbd5e1;margin-top:4px;">📍 ${o.addr || 'غير محدد'} | 📅 ${o.date}</div>
+                        <div style="font-size:0.84rem;color:#94a3b8;margin-top:2px;">📦 ${o.items || '---'}</div>
+                        <div style="font-size:0.88rem;color:#fbbf24;font-weight:800;margin-top:4px;">💰 الإجمالي: ${Number(o.total).toLocaleString()} د.ع</div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn" style="padding:7px 12px;font-size:0.8rem;" onclick="fillWaybillFromOrder(${i})">🖨️ وصل شحن</button>
+                        <button class="btn btn-danger" style="padding:7px 12px;font-size:0.8rem;" onclick="deleteOrder(${i})">حذف</button>
+                    </div>
+                </div>
+            `).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد طلبات مسجلة بعد.</div>';
+        }
+
+        function deleteOrder(i) {
+            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
+            orders.splice(i, 1);
+            localStorage.setItem('ym_admin_orders', JSON.stringify(orders));
+            renderOrdersAdmin();
+        }
+
+        function fillWaybillFromOrder(i) {
+            const o = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]')[i];
+            if (!o) return;
+            document.getElementById('wName').value = o.name;
+            document.getElementById('wPhone').value = o.phone;
+            document.getElementById('wAddr').value = o.addr;
+            document.getElementById('wAmount').value = o.total;
+            printWaybill();
+        }
+
+        // طباعة وصل التوصيل الحراري
+        function printWaybill() {
+            const name = document.getElementById('wName').value.trim() || 'زبون مكتبة ياسين المولى';
+            const phone = document.getElementById('wPhone').value.trim() || '---';
+            const addr = document.getElementById('wAddr').value.trim() || '---';
+            const amount = Number(document.getElementById('wAmount').value || 0).toLocaleString();
+            const notes = document.getElementById('wNotes').value.trim();
+            const code = 'YM-' + Math.floor(1000 + Math.random() * 9000);
+
+            const w = window.open('', '_blank', 'width=420,height=550');
+            w.document.write(`
+                <html dir="rtl"><head><title>وصل شحن ${code}</title></head>
+                <body style="font-family:Tahoma,sans-serif;padding:20px;border:3px solid #000;margin:10px;">
+                    <h2 style="text-align:center;margin:0 0 6px;">مكتبة ياسين المولى</h2>
+                    <div style="text-align:center;font-size:13px;border-bottom:2px dashed #000;padding-bottom:8px;">بوليصة توصيل رسمية | رقم الشحنة: <b>${code}</b></div>
+                    <p style="font-size:15px;"><b>اسم المستلم:</b> ${name}</p>
+                    <p style="font-size:15px;"><b>رقم الهاتف:</b> ${phone}</p>
+                    <p style="font-size:15px;"><b>العنوان الكامل:</b> ${addr}</p>
+                    ${notes ? `<p style="font-size:13px;"><b>ملاحظات:</b> ${notes}</p>` : ''}
+                    <div style="background:#000;color:#fff;padding:12px;text-align:center;font-size:18px;font-weight:bold;margin-top:14px;">
+                        المبلغ المطلوب عند الاستلام: ${amount} د.ع
+                    </div>
+                    <script>window.print();<\/script>
+                </body></html>
+            `);
+            w.document.close();
+        }
+
+        // صانع ستوري الإعلانات
+        function generateStoryImage() {
+            const title = document.getElementById('sTitle').value.trim() || 'أحدث الملازم الدراسية';
+            const sub = document.getElementById('sSub').value.trim() || 'متوفرة الآن بكمية محدودة';
+            const price = document.getElementById('sPrice').value.trim() || 'اطلبها الآن';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 540; canvas.height = 960;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 540, 960);
+            grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e3a8a');
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, 540, 960);
+
+            ctx.fillStyle = '#f25011'; ctx.fillRect(40, 70, 460, 10);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 34px Tahoma'; ctx.textAlign = 'center';
+            ctx.fillText('مكتبة ياسين المولى', 270, 140);
+
+            ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 24px Tahoma';
+            ctx.fillText('✨ متوفر الآن في المكتبة ✨', 270, 250);
+
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 36px Tahoma';
+            ctx.fillText(title.slice(0, 26), 270, 420);
+
+            ctx.fillStyle = '#cbd5e1'; ctx.font = '24px Tahoma';
+            ctx.fillText(sub.slice(0, 34), 270, 475);
+
+            ctx.fillStyle = '#f25011'; ctx.fillRect(100, 540, 340, 80);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 34px Tahoma';
+            ctx.fillText(price, 270, 592);
+
+            ctx.fillStyle = '#e2e8f0'; ctx.font = '22px Tahoma';
+            ctx.fillText('اطلبها مباشرة عبر متجرنا الإلكتروني', 270, 770);
+            ctx.fillText('توصيل سريع لجميع محافظات العراق 🚚', 270, 815);
+
+            const link = document.createElement('a');
+            link.download = 'story-yassin-almawla.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function copyMarketingPost() {
+            const t = document.getElementById('msgOfferTitle').value.trim() || 'جديد مكتبة ياسين المولى 📚';
+            const b = document.getElementById('msgOfferBody').value.trim();
+            const post = `🔥 ${t}\n\n${b}\n\n🛒 اطلبها الآن مباشرة من متجرنا الإلكتروني:\nhttps://mrgrazi94-alt.github.io/yassin-almawla-library/\n\n🚚 توصيل سريع لجميع محافظات العراق!`;
+            navigator.clipboard.writeText(post).then(() => alert('✅ تم نسخ المنشور الإعلاني جاهزاً للنشر على تيليغرام وإنستغرام!'));
+        }
+
+        function exportExcelCsv() {
+            const prods = getProducts();
+            let csv = '\uFEFFاسم المنتج,السعر,السعر القديم,القسم,الألوان,الحالة\n';
+            prods.forEach(p => {
+                const cols = Array.isArray(p.variants) ? p.variants.join(' - ') : '';
+                csv += `"${(p.name||'').replace(/"/g,'""')}",${p.price||0},${p.oldPrice||0},"${p.category||''}","${cols}","${p.outOfStock ? 'نافذ' : 'متوفر'}"\n`;
+            });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+            a.download = 'جرد-مكتبة-ياسين-المولى.csv';
+            a.click();
+        }
+
+        function downloadJsonBackup() {
+            const data = { products: getProducts(), orders: JSON.parse(localStorage.getItem('ym_admin_orders') || '[]') };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+            a.download = 'backup-yassin-library.json';
+            a.click();
+        }
+
+        function restoreJsonBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (Array.isArray(data.products)) saveProducts(data.products);
+                    if (Array.isArray(data.orders)) localStorage.setItem('ym_admin_orders', JSON.stringify(data.orders));
+                    renderOrdersAdmin();
+                    alert('✅ تم استعادة النسخة الاحتياطية بنجاح!');
+                } catch (err) { alert('❌ ملف النسخة الاحتياطية غير صالح'); }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
