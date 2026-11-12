@@ -697,134 +697,131 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(syncStickyCartLive, 400);
 })();
 </script>
+
 <script id="yassinSmartCartFix">
 (function() {
-    var trackedTotal = 0;
+    var cachedProducts = [];
 
-    function getProductsMap() {
+    // تحميل المنتجات من data/products.json أو LocalStorage لضمان معرفة سعر كل ID
+    fetch('data/products.json?v=' + Date.now())
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(data) { if (Array.isArray(data)) cachedProducts = data; })
+        .catch(function() {});
+
+    function buildPriceLookup() {
         var map = {};
+        var sources = [cachedProducts];
         try {
-            var p1 = JSON.parse(localStorage.getItem('yassin_products') || '[]');
-            var p2 = JSON.parse(localStorage.getItem('products') || '[]');
-            var all = [].concat(p1, p2, Array.isArray(window.products) ? window.products : []);
-            all.forEach(function(p) {
-                if (p && p.id != null) map[String(p.id)] = Number(String(p.price || 0).replace(/\D/g, ''));
-                if (p && p.name) map[p.name.trim()] = Number(String(p.price || 0).replace(/\D/g, ''));
-            });
+            for (var i = 0; i < localStorage.length; i++) {
+                var val = JSON.parse(localStorage.getItem(localStorage.key(i)));
+                if (Array.isArray(val)) sources.push(val);
+            }
         } catch(e) {}
+        if (Array.isArray(window.products)) sources.push(window.products);
+
+        sources.forEach(function(arr) {
+            arr.forEach(function(item) {
+                if (!item || typeof item !== 'object') return;
+                var price = Number(String(item.price || 0).replace(/\D/g, ''));
+                if (price > 0) {
+                    if (item.id != null) map[String(item.id)] = price;
+                    if (item.name) map[item.name.trim()] = price;
+                }
+            });
+        });
         return map;
     }
 
-    function computeExactCart() {
-        var count = 0;
-        var total = 0;
-        var pMap = getProductsMap();
+    function calculateCartFromEverything() {
+        var priceMap = buildPriceLookup();
+        var bestCount = 0;
+        var bestTotal = 0;
 
-        // 1. فحص جميع مفاتيح LocalStorage للعثور على السلة وحسابها حتى لو كانت تحفظ id فقط
+        // 1. فحص جميع مفاتيح LocalStorage دون استثناء
         for (var k = 0; k < localStorage.length; k++) {
             var key = localStorage.key(k);
-            if (!key || key.toLowerCase().indexOf('cart') === -1) continue;
+            // تجاهل مفاتيح المنتجات والطلبات المؤرشفة
+            if (!key || key.indexOf('product') !== -1 || key.indexOf('admin') !== -1) continue;
             try {
                 var data = JSON.parse(localStorage.getItem(key));
-                if (Array.isArray(data)) {
-                    data.forEach(function(item) {
-                        if (!item) return;
-                        var q = Number(item.qty || item.quantity || item.count || 1);
-                        var p = Number(String(item.price || 0).replace(/\D/g, ''));
-                        if (!p && item.id != null && pMap[String(item.id)]) p = pMap[String(item.id)];
-                        if (!p && item.productId != null && pMap[String(item.productId)]) p = pMap[String(item.productId)];
-                        if (!p && item.name && pMap[item.name.trim()]) p = pMap[item.name.trim()];
-                        count += q;
-                        total += (p * q);
+                if (Array.isArray(data) && data.length > 0) {
+                    var c = 0, t = 0;
+                    data.forEach(function(entry) {
+                        if (!entry || typeof entry !== 'object') return;
+                        var qty = Number(entry.qty || entry.quantity || entry.count || entry.amount || 1);
+                        var unitPrice = Number(String(entry.price || 0).replace(/\D/g, ''));
+                        if (!unitPrice && entry.id != null) unitPrice = priceMap[String(entry.id)] || 0;
+                        if (!unitPrice && entry.productId != null) unitPrice = priceMap[String(entry.productId)] || 0;
+                        if (!unitPrice && entry.name) unitPrice = priceMap[entry.name.trim()] || 0;
+                        if (unitPrice > 0) {
+                            c += qty;
+                            t += (unitPrice * qty);
+                        }
                     });
-                    if (count > 0) break;
+                    if (t > bestTotal) {
+                        bestTotal = t;
+                        bestCount = c;
+                    }
                 }
             } catch(e) {}
         }
 
-        // 2. قراءة العدد من أيقونة السلة العلوية إذا لم يكن في LocalStorage
-        var headerBadges = Array.from(document.querySelectorAll('header span, header div, nav span, nav div'));
-        if (count === 0) {
-            for (var i = 0; i < headerBadges.length; i++) {
-                var el = headerBadges[i];
-                if (el.children.length === 0 && /^\d+$/.test(el.textContent.trim())) {
-                    var parentText = (el.parentElement ? el.parentElement.textContent : '');
-                    if (parentText.indexOf('السلة') !== -1 || el.id.toLowerCase().indexOf('cart') !== -1 || el.className.toLowerCase().indexOf('cart') !== -1) {
-                        count = parseInt(el.textContent.trim(), 10);
-                        break;
-                    }
+        // 2. قراءة المجموع مباشرة من داخل نافذة/قائمة السلة المخفية في الصفحة (DOM)
+        if (bestTotal === 0) {
+            var cartContainer = document.querySelector('#cartItems, .cart-items, #cartModal, .cart-modal, #cartSidebar, .cart-drawer');
+            if (cartContainer) {
+                var totalNode = cartContainer.querySelector('#cartTotal, .cart-total, [id*="total" i], [class*="total" i]');
+                if (totalNode) {
+                    var domTotal = parseInt(totalNode.textContent.replace(/\D/g, '') || '0', 10);
+                    if (domTotal > 0) bestTotal = domTotal;
                 }
             }
         }
 
-        // 3. قراءة المجموع من أعلى الصفحة (مثل المربع الأسود في الهيدر) إن وُجد
-        if (total === 0) {
-            for (var j = 0; j < headerBadges.length; j++) {
-                var hEl = headerBadges[j];
-                var txt = hEl.textContent.trim();
-                if (hEl.children.length === 0 && /^\d[\d,]*\s*د\.ع$/.test(txt)) {
-                    var val = parseInt(txt.replace(/\D/g, '') || '0', 10);
-                    if (val > 0) { total = val; break; }
-                }
-            }
+        // 3. قراءة العدد من شارة السلة في الهيدر
+        var headerBadge = document.querySelector('#cartCount, .cart-count, header .badge, nav .badge');
+        if (headerBadge) {
+            var hCount = parseInt(headerBadge.textContent.replace(/\D/g, '') || '0', 10);
+            if (hCount > 0) bestCount = hCount;
         }
 
-        if (total === 0 && count > 0 && trackedTotal > 0) {
-            total = trackedTotal;
-        }
-        if (count === 0) trackedTotal = 0;
-
-        return { count: count, total: total };
+        return { count: bestCount, total: bestTotal };
     }
 
-    // التقاط السعر مباشرة من بطاقة المنتج عند الضغط على "أضف إلى السلة"
-    document.addEventListener('click', function(e) {
-        var btn = e.target.closest('button, a');
-        if (!btn) return;
-        var btnTxt = btn.textContent || '';
-        if (btnTxt.indexOf('أضف إلى السلة') !== -1 || btnTxt.indexOf('اضف الى السلة') !== -1) {
-            var card = btn.closest('.product-card, [class*="card"], [class*="product"], article, li') || btn.parentElement.parentElement;
-            if (card) {
-                var matches = card.textContent.match(/(\d[\d,]*)\s*د\.ع/g);
-                if (matches && matches.length) {
-                    var lastPrice = parseInt(matches[matches.length - 1].replace(/\D/g, '') || '0', 10);
-                    if (lastPrice > 0) trackedTotal += lastPrice;
-                }
-            }
-        }
-        setTimeout(updateBottomBarUI, 80);
-    }, true);
-
-    function updateBottomBarUI() {
+    function syncBarNow() {
         var bottomBar = document.getElementById('stickyCartBar') || Array.from(document.querySelectorAll('div')).find(function(el) {
             return el.style.position === 'fixed' && el.textContent.indexOf('مجموع مشترياتك') !== -1;
         });
         if (!bottomBar) return;
 
-        var info = computeExactCart();
-        bottomBar.style.display = info.count > 0 ? 'flex' : 'none';
+        var res = calculateCartFromEverything();
+        bottomBar.style.display = res.count > 0 ? 'flex' : 'none';
 
-        bottomBar.querySelectorAll('span, div, b, strong').forEach(function(el) {
+        // تحديث نص السعر والعدد بدقة
+        var allLeafs = bottomBar.querySelectorAll('span, div, b, strong');
+        allLeafs.forEach(function(el) {
             if (el.children.length > 0) return;
-            var t = el.textContent.trim();
-            if (/^\d+$/.test(t)) el.textContent = info.count;
-            if (t.indexOf('د.ع') !== -1) el.textContent = info.total.toLocaleString() + ' د.ع';
+            var txt = el.textContent.trim();
+            if (/^\d+$/.test(txt)) {
+                el.textContent = res.count;
+            } else if (txt.indexOf('د.ع') !== -1) {
+                el.textContent = res.total.toLocaleString() + ' د.ع';
+            }
         });
 
-        var actionBtn = bottomBar.querySelector('button');
-        if (actionBtn && !actionBtn.dataset.boundCart) {
-            actionBtn.dataset.boundCart = '1';
-            actionBtn.onclick = function(ev) {
-                ev.preventDefault();
-                ev.stopPropagation();
-                // البحث عن زر السلة في أعلى الصفحة والضغط عليه
-                var topCartBtn = Array.from(document.querySelectorAll('header button, header a, nav button, nav a, [id*="cart" i], [class*="cart" i]')).find(function(el) {
-                    return el !== actionBtn && !bottomBar.contains(el) && (el.textContent.indexOf('السلة') !== -1 || el.id.toLowerCase().indexOf('cart') !== -1);
-                });
-                if (topCartBtn) {
-                    topCartBtn.click();
+        // ربط زر الفتح بنافذة السلة الأصلية
+        var btn = bottomBar.querySelector('button');
+        if (btn && !btn.dataset.superLinked) {
+            btn.dataset.superLinked = '1';
+            btn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var topBtn = (headerBadge && headerBadge.closest('button, a, div[onclick]')) ||
+                             document.querySelector('#cartBtn, .cart-btn, [onclick*="cart" i]');
+                if (topBtn) {
+                    topBtn.click();
                 } else {
-                    var modal = document.querySelector('#cartModal, .cart-modal, #cartSidebar, .cart-drawer, [id*="cartModal" i]');
+                    var modal = document.querySelector('#cartModal, .cart-modal, #cartSidebar, .cart-drawer');
                     if (modal) {
                         modal.style.display = 'flex';
                         modal.classList.add('active', 'open', 'show');
@@ -834,9 +831,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    setInterval(updateBottomBarUI, 350);
+    // اعتراض أي عملية حفظ في localStorage لتحديث الشريط في نفس اللحظة
+    var origSetItem = localStorage.setItem;
+    localStorage.setItem = function(k, v) {
+        origSetItem.apply(this, arguments);
+        setTimeout(syncBarNow, 30);
+    };
+
+    setInterval(syncBarNow, 350);
+    window.addEventListener('load', syncBarNow);
 })();
 </script>
 </body>
 </html>
+
 
