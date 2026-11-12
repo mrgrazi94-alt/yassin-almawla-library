@@ -1,0 +1,23 @@
+﻿{
+  "name": "مكتبة ياسين المولى",
+  "short_name": "ياسين المولى",
+  "description": "المتجر الإلكتروني الرسمي لمكتبة ياسين المولى للملازم والقرطاسية والطباعة",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f25011",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "assets/images/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "assets/images/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
