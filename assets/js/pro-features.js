@@ -1,82 +1,159 @@
 ﻿(function() {
-    function buildYassinProHub() {
-        if (document.getElementById('yassinExclusiveHub')) return;
+    function initYassinUltimatePlatform() {
+        if (document.getElementById('yassinUltimateHub')) return;
 
-        // نبحث عن قسم المنتجات أو نضعه في بداية المحتوى الرئيسي
+        // === 1. حقن تحسينات التنسيق وتوحيد صور المنتجات ===
+        var styleTag = document.createElement('style');
+        styleTag.textContent = `
+            .product-card img, .product-img-wrap img {
+                aspect-ratio: 1 / 1;
+                object-fit: cover;
+                background: #f8fafc;
+                border-radius: 12px;
+            }
+            .yassin-hub-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 12px;
+            }
+            @media (max-width: 640px) {
+                .yassin-hub-grid {
+                    display: flex;
+                    overflow-x: auto;
+                    scroll-snap-type: x mandatory;
+                    padding-bottom: 8px;
+                    gap: 10px;
+                }
+                .yassin-hub-card {
+                    min-width: 230px;
+                    scroll-snap-align: start;
+                    flex-shrink: 0;
+                }
+            }
+            .yassin-hub-card:hover {
+                transform: translateY(-3px);
+                filter: brightness(1.05);
+            }
+        `;
+        document.head.appendChild(styleTag);
+
+        // === 2. شريط التقدم للتوصيل المجاني أعلى الصفحة ===
+        var freeShippingThreshold = 25000;
+        var fsBar = document.createElement('div');
+        fsBar.id = 'freeShippingProgressBar';
+        fsBar.style.cssText = 'background:#0f172a;color:#fff;padding:8px 16px;text-align:center;font-size:0.85rem;direction:rtl;border-bottom:2px solid #f25011;position:relative;z-index:900;';
+        fsBar.innerHTML = `
+            <div id="fsText" style="font-weight:700;margin-bottom:5px;">🚚 اطلب بقيمة <b>25,000 د.ع</b> أو أكثر واحصل على <b>توصيل مجاني</b> لجميع المحافظات!</div>
+            <div style="max-width:420px;height:6px;background:rgba(255,255,255,0.18);border-radius:10px;margin:0 auto;overflow:hidden;">
+                <div id="fsFill" style="width:15%;height:100%;background:linear-gradient(90deg,#f25011,#fbbf24);transition:width 0.4s ease;"></div>
+            </div>
+        `;
+        document.body.prepend(fsBar);
+
+        setInterval(function() {
+            var totalEl = document.getElementById('cartTotal');
+            if (!totalEl) return;
+            var currentVal = parseInt(totalEl.textContent.replace(/\D/g, '') || '0', 10);
+            var pct = Math.min(100, Math.round((currentVal / freeShippingThreshold) * 100));
+            var fillEl = document.getElementById('fsFill');
+            var txtEl = document.getElementById('fsText');
+            if (fillEl) fillEl.style.width = (pct > 0 ? pct : 10) + '%';
+            if (txtEl) {
+                if (currentVal >= freeShippingThreshold) {
+                    txtEl.innerHTML = '🎉 <b>مبروك!</b> لقد حصلت على <b>توصيل مجاني بالكامل</b> لطلبك!';
+                } else if (currentVal > 0) {
+                    var rem = freeShippingThreshold - currentVal;
+                    txtEl.innerHTML = '🚚 أضف مشتريات بقيمة <b style="color:#fbbf24;">' + rem.toLocaleString() + ' د.ع</b> فقط لتحصل على <b>توصيل مجاني</b>!';
+                } else {
+                    txtEl.innerHTML = '🚚 اطلب بقيمة <b>25,000 د.ع</b> أو أكثر واحصل على <b>توصيل مجاني</b> لجميع المحافظات!';
+                }
+            }
+        }, 800);
+
+        // === 3. تفعيل البحث الصوتي الذكي (Voice Search) ===
+        var searchInput = document.querySelector('input[type="search"], input[placeholder*="بحث"], input[placeholder*="ابحث"]');
+        if (searchInput && !document.getElementById('voiceSearchBtn')) {
+            var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRec) {
+                var micBtn = document.createElement('button');
+                micBtn.type = 'button';
+                micBtn.id = 'voiceSearchBtn';
+                micBtn.title = 'ابحث بصوتك';
+                micBtn.innerHTML = '🎙️';
+                micBtn.style.cssText = 'background:#f25011;color:#fff;border:none;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:1rem;margin-right:6px;';
+                searchInput.parentNode.appendChild(micBtn);
+
+                micBtn.onclick = function() {
+                    var rec = new SpeechRec();
+                    rec.lang = 'ar-IQ';
+                    micBtn.innerHTML = '🔴...';
+                    rec.onresult = function(ev) {
+                        var transcript = ev.results[0][0].transcript;
+                        searchInput.value = transcript;
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        micBtn.innerHTML = '🎙️';
+                    };
+                    rec.onerror = function() { micBtn.innerHTML = '🎙️'; };
+                    rec.onend = function() { micBtn.innerHTML = '🎙️'; };
+                    rec.start();
+                };
+            }
+        }
+
+        // === 4. مركز الأدوات الذكية (للزبون + لصاحب المكتبة) ===
         var productsSection = document.querySelector('#productsGrid, .products-section, .products-grid');
         var hub = document.createElement('section');
-        hub.id = 'yassinExclusiveHub';
-        hub.style.cssText = 'max-width:1240px;margin:25px auto;padding:0 16px;direction:rtl;font-family:inherit;';
+        hub.id = 'yassinUltimateHub';
+        hub.style.cssText = 'max-width:1240px;margin:22px auto;padding:0 16px;direction:rtl;font-family:inherit;';
 
         hub.innerHTML = `
-            <div style="background:linear-gradient(90deg,#0f172a,#1e293b);color:#f8fafc;padding:12px 18px;border-radius:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-right:4px solid #f25011;font-size:0.9rem;">
-                <div>💡 <b>نصيحة التفوق:</b> نظّم ملازمك ودفاترك مبكراً لتختصر نصف وقت المراجعة في الامتحانات!</div>
-                <div style="background:#f25011;color:#fff;padding:4px 12px;border-radius:8px;font-weight:800;font-size:0.8rem;">خدمات مكتبة ياسين المولى الذكية</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;background:#f8fafc;padding:10px 16px;border-radius:14px;border:1px solid #e2e8f0;">
+                <div style="font-weight:800;color:#0f172a;font-size:0.95rem;">⚡ خدمات مكتبة ياسين المولى التفاعلية</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button type="button" id="btnTrackOrder" style="background:#0f172a;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;">📦 تتبع طلبي</button>
+                    <button type="button" id="btnOwnerTools" style="background:#f25011;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;">🛠️ أدوات صاحب المكتبة</button>
+                </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;">
-                <div id="btnPrintCalc" style="background:linear-gradient(135deg,#f25011,#c2410c);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(242,80,17,0.22);">
-                    <div style="background:#0f172a;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🖨️</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">حاسبة الاستنساخ والطباعة</div>
-                        <div style="font-size:0.8rem;opacity:0.92;">احسب سعر طباعة PDF والتسليك فوراً</div>
-                    </div>
+            <div class="yassin-hub-grid">
+                <div id="btnPrintCalc" class="yassin-hub-card" style="background:linear-gradient(135deg,#f25011,#c2410c);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#0f172a;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">🖨️</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">حاسبة الاستنساخ PDF</div><div style="font-size:0.78rem;opacity:0.9;">احسب سعر الطباعة والتسليك</div></div>
                 </div>
 
-                <div id="btnSmartBundle" style="background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(15,23,42,0.2);">
-                    <div style="background:#f25011;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🎒</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">مُكوّن الحقيبة الذكي</div>
-                        <div style="font-size:0.8rem;opacity:0.9;">باقات جاهزة لمرحلتك بخصم خاص</div>
-                    </div>
+                <div id="btnSmartBundle" class="yassin-hub-card" style="background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#f25011;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">🎒</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">مُكوّن الحقيبة الذكي</div><div style="font-size:0.78rem;opacity:0.9;">باقات دراسية بخصم 10%</div></div>
                 </div>
 
-                <div id="btnGroupOrder" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(79,70,229,0.22);">
-                    <div style="background:#fbbf24;color:#0f172a;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🤝</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">اطلب وية جماعتك</div>
-                        <div style="font-size:0.8rem;opacity:0.9;">قسّم الفاتورة والتوصيل بين أصدقائك</div>
-                    </div>
+                <div id="btnGroupOrder" class="yassin-hub-card" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#fbbf24;color:#0f172a;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">🤝</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">اطلب وية جماعتك</div><div style="font-size:0.78rem;opacity:0.9;">قسّم الفاتورة والتوصيل</div></div>
                 </div>
 
-                <div id="btnBulkList" style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(13,148,136,0.22);">
-                    <div style="background:#fff;color:#0f766e;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">📋</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">اطلب قائمة ملازم كاملة</div>
-                        <div style="font-size:0.8rem;opacity:0.9;">الصق قائمة المدرس ونجهزها دفعة واحدة</div>
-                    </div>
+                <div id="btnBulkList" class="yassin-hub-card" style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#fff;color:#0f766e;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">📋</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">قائمة ملازم كاملة</div><div style="font-size:0.78rem;opacity:0.9;">الصق قائمة المدرس دفعة واحدة</div></div>
                 </div>
 
-                <div id="btnScratchCard" style="background:linear-gradient(135deg,#be123c,#e11d48);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(225,29,72,0.25);">
-                    <div style="background:#fde047;color:#0f172a;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🎁</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">امسح واربح هديتك</div>
-                        <div style="font-size:0.8rem;opacity:0.9;">بطاقة حظ فورية لكل طالب يزور المتجر</div>
-                    </div>
+                <div id="btnScratchCard" class="yassin-hub-card" style="background:linear-gradient(135deg,#be123c,#e11d48);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#fde047;color:#0f172a;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">🎁</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">امسح واربح هديتك</div><div style="font-size:0.78rem;opacity:0.9;">بطاقة حظ فورية لكل طالب</div></div>
                 </div>
 
-                <div id="btnChecklist" style="background:linear-gradient(135deg,#0369a1,#0284c7);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(2,132,199,0.22);">
-                    <div style="background:#fff;color:#0369a1;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">✅</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">كاشف نواقص الحقيبة</div>
-                        <div style="font-size:0.8rem;opacity:0.9;">حدد ما لديك وسنستخرج نواقصك</div>
-                    </div>
+                <div id="btnChecklist" class="yassin-hub-card" style="background:linear-gradient(135deg,#0369a1,#0284c7);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#fff;color:#0369a1;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">✅</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">كاشف نواقص الحقيبة</div><div style="font-size:0.78rem;opacity:0.9;">استخرج نواقصك تلقائياً</div></div>
                 </div>
 
-                <div id="btnSpecialReq" style="background:linear-gradient(135deg,#065f46,#047857);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(6,95,70,0.22);">
-                    <div style="background:#fbbf24;color:#0f172a;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🔍</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">اطلب ملزمة غير موجودة</div>
-                        <div style="font-size:0.8rem;opacity:0.9;">اكتب اسم الملزمة والأستاذ ونوفّرها لك</div>
-                    </div>
+                <div id="btnSpecialReq" class="yassin-hub-card" style="background:linear-gradient(135deg,#065f46,#047857);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#fbbf24;color:#0f172a;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">🔍</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">اطلب ملزمة خاصة</div><div style="font-size:0.78rem;opacity:0.9;">نوفّر أي ملزمة غير موجودة</div></div>
                 </div>
 
-                <div id="btnStudyTimer" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff;padding:16px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 8px 18px rgba(30,41,59,0.22);">
-                    <div style="background:#38bdf8;color:#0f172a;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">⏱️</div>
-                    <div>
-                        <div style="font-weight:800;font-size:1rem;">مؤقت الدراسة والتركيز</div>
-                        <div style="font-size:0.8rem;opacity:0.9;">ادرس بنظام البومودورو مع منبه الاستراحة</div>
-                    </div>
+                <div id="btnStudyTimer" class="yassin-hub-card" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff;padding:15px;border-radius:16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:0.2s;">
+                    <div style="background:#38bdf8;color:#0f172a;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">⏱️</div>
+                    <div><div style="font-weight:800;font-size:0.95rem;">مؤقت الدراسة الذكي</div><div style="font-size:0.78rem;opacity:0.9;">ادرس بنظام البومودورو</div></div>
                 </div>
             </div>
         `;
@@ -87,8 +164,65 @@
             document.body.insertBefore(hub, document.body.children[2] || null);
         }
 
-        // إضافة النوافذ التفاعلية لجميع الميزات
+        // === 5. النوافذ التفاعلية (للزبون ولصاحب المكتبة) ===
         var modals = `
+        <!-- نافذة أدوات صاحب المكتبة الاحترافية -->
+        <div id="mOwnerTools" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+            <div style="background:#fff;color:#0f172a;width:100%;max-width:520px;border-radius:22px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.4);max-height:90vh;overflow-y:auto;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
+                    <h3 style="margin:0;font-size:1.15rem;">🛠️ أدوات صاحب المكتبة الذكية</h3>
+                    <button type="button" onclick="document.getElementById('mOwnerTools').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">✖</button>
+                </div>
+
+                <!-- 1. مولد ملصق التوصيل الحراري -->
+                <div style="background:#f8fafc;padding:14px;border-radius:14px;border:1px solid #cbd5e1;margin-bottom:14px;">
+                    <div style="font-weight:800;margin-bottom:8px;color:#0f172a;">🏷️ مولّد وصل التوصيل الحراري (Waybill Label)</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                        <input type="text" id="wbCustName" placeholder="اسم الزبون" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                        <input type="text" id="wbCustPhone" placeholder="رقم الهاتف" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                        <input type="text" id="wbCustAddr" placeholder="المحافظة والمنطقة" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                        <input type="number" id="wbAmount" placeholder="المبلغ المطلوب (د.ع)" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                    </div>
+                    <button type="button" id="btnPrintWaybill" style="background:#0f172a;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">🖨️ طباعة ملصق التوصيل الآن</button>
+                </div>
+
+                <!-- 2. صانع إعلانات الستوري -->
+                <div style="background:#fff7ed;padding:14px;border-radius:14px;border:1px solid #fed7aa;margin-bottom:14px;">
+                    <div style="font-weight:800;margin-bottom:8px;color:#9a3412;">📸 صانع بطاقة إعلان ستوري (Instagram / Telegram)</div>
+                    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-bottom:8px;">
+                        <input type="text" id="stProdName" placeholder="اسم الملزمة أو العرض" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                        <input type="text" id="stProdPrice" placeholder="السعر (مثال: 10,000 د.ع)" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;">
+                    </div>
+                    <button type="button" id="btnGenStoryCard" style="background:#f25011;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">✨ توليد وتحميل صورة الإعلان</button>
+                </div>
+
+                <!-- 3. تصدير جرد المكتبة -->
+                <button type="button" id="btnExportCsv" style="background:#16a34a;color:#fff;border:none;padding:11px;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;">📊 تصدير جرد المنتجات والأسعار (Excel / CSV)</button>
+            </div>
+        </div>
+
+        <!-- نافذة تتبع حالة الطلب للزبون -->
+        <div id="mTrackOrder" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+            <div style="background:#fff;color:#0f172a;width:100%;max-width:440px;border-radius:22px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.4);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
+                    <h3 style="margin:0;font-size:1.15rem;">📦 متابعة حالة طلبك</h3>
+                    <button type="button" onclick="document.getElementById('mTrackOrder').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">✖</button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="background:#f1f5f9;padding:12px;border-radius:12px;text-align:center;">
+                        <div style="font-size:0.82rem;color:#475569;">رقم تتبع الجلسة الحالي:</div>
+                        <div id="trackCodeDisplay" style="font-size:1.3rem;font-weight:900;color:#f25011;letter-spacing:1px;">#YM-2026</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88rem;">
+                        <div style="padding:10px;background:#ecfdf5;border-right:4px solid #10b981;border-radius:8px;">✅ <b>1. استلام الطلب:</b> يتم تأكيد طلبك فور إرساله على واتساب المكتبة.</div>
+                        <div style="padding:10px;background:#fff7ed;border-right:4px solid #f25011;border-radius:8px;">⚙️ <b>2. التجهيز والتسليك:</b> يتم طباعة وتغليف ملازمك بأعلى دقة.</div>
+                        <div style="padding:10px;background:#eff6ff;border-right:4px solid #3b82f6;border-radius:8px;">🚚 <b>3. التوصيل السريع:</b> يصل المندوب لباب بيتك خلال 24-48 ساعة.</div>
+                    </div>
+                    <button type="button" id="btnAskOrderStatusWa" style="background:#16a34a;color:#fff;border:none;padding:11px;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;">استفسر عن موقع المندوب عبر واتساب</button>
+                </div>
+            </div>
+        </div>
+
         <!-- حاسبة الاستنساخ -->
         <div id="mPrintCalc" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:16px;">
             <div style="background:#fff;color:#0f172a;width:100%;max-width:450px;border-radius:20px;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.35);">
@@ -266,7 +400,89 @@
             return '9647700000000';
         }
 
-        // 1. حاسبة الاستنساخ
+        // === ربط أدوات صاحب المكتبة ===
+        document.getElementById('btnOwnerTools').onclick = function() {
+            document.getElementById('mOwnerTools').style.display = 'flex';
+        };
+
+        document.getElementById('btnPrintWaybill').onclick = function() {
+            var cName = document.getElementById('wbCustName').value.trim() || 'زبون مكتبة ياسين المولى';
+            var cPhone = document.getElementById('wbCustPhone').value.trim() || '---';
+            var cAddr = document.getElementById('wbCustAddr').value.trim() || '---';
+            var cAmt = Number(document.getElementById('wbAmount').value || 0).toLocaleString();
+            var ordNum = 'YM-' + Math.floor(1000 + Math.random() * 9000);
+            var w = window.open('', '_blank', 'width=420,height=520');
+            w.document.write(`
+                <html dir="rtl"><head><title>وصل شحن ${ordNum}</title></head>
+                <body style="font-family:Tahoma,sans-serif;padding:20px;border:3px solid #000;margin:10px;">
+                    <h2 style="text-align:center;margin:0 0 8px;">مكتبة ياسين المولى</h2>
+                    <div style="text-align:center;font-size:13px;border-bottom:2px dashed #000;padding-bottom:8px;">بوليصة شحن وتوصيل رسمية | رقم: <b>${ordNum}</b></div>
+                    <p style="font-size:15px;"><b>اسم المستلم:</b> ${cName}</p>
+                    <p style="font-size:15px;"><b>رقم الهاتف:</b> ${cPhone}</p>
+                    <p style="font-size:15px;"><b>العنوان:</b> ${cAddr}</p>
+                    <div style="background:#000;color:#fff;padding:12px;text-align:center;font-size:18px;font-weight:bold;margin-top:14px;">
+                        المبلغ المطلوب عند الاستلام: ${cAmt} د.ع
+                    </div>
+                    <script>window.print();<\/script>
+                </body></html>
+            `);
+            w.document.close();
+        };
+
+        document.getElementById('btnGenStoryCard').onclick = function() {
+            var pName = document.getElementById('stProdName').value.trim() || 'أحدث الملازم الدراسية';
+            var pPrice = document.getElementById('stProdPrice').value.trim() || 'متوفرة الآن';
+            var canvas = document.createElement('canvas');
+            canvas.width = 540; canvas.height = 960;
+            var ctx = canvas.getContext('2d');
+            var grad = ctx.createLinearGradient(0, 0, 540, 960);
+            grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e3a8a');
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, 540, 960);
+            ctx.fillStyle = '#f25011'; ctx.fillRect(40, 80, 460, 12);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 34px Tahoma'; ctx.textAlign = 'center';
+            ctx.fillText('مكتبة ياسين المولى', 270, 150);
+            ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 24px Tahoma';
+            ctx.fillText('✨ متوفر الآن في المكتبة ✨', 270, 260);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 38px Tahoma';
+            ctx.fillText(pName.slice(0, 28), 270, 440);
+            ctx.fillStyle = '#f25011'; ctx.fillRect(110, 520, 320, 80);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 34px Tahoma';
+            ctx.fillText(pPrice, 270, 572);
+            ctx.fillStyle = '#cbd5e1'; ctx.font = '22px Tahoma';
+            ctx.fillText('اطلبها الآن عبر متجرنا الإلكتروني', 270, 760);
+            ctx.fillText('توصيل سريع لجميع محافظات العراق 🚚', 270, 810);
+            var link = document.createElement('a');
+            link.download = 'story-yassin-almawla.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+
+        document.getElementById('btnExportCsv').onclick = function() {
+            var prods = JSON.parse(localStorage.getItem('yassin_products') || localStorage.getItem('products') || '[]');
+            var csv = '\uFEFFاسم المنتج,السعر,القسم,الحالة\n';
+            prods.forEach(function(p) {
+                csv += `"${(p.name||'').replace(/"/g,'""')}",${p.price||0},"${p.category||''}","${p.outOfStock ? 'نافذ' : 'متوفر'}"\n`;
+            });
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'جرد-مكتبة-ياسين-المولى.csv';
+            a.click();
+        };
+
+        // === ربط تتبع الطلب ===
+        document.getElementById('btnTrackOrder').onclick = function() {
+            var code = localStorage.getItem('ym_last_order') || ('#YM-' + Math.floor(1000 + Math.random() * 9000));
+            localStorage.setItem('ym_last_order', code);
+            document.getElementById('trackCodeDisplay').textContent = code;
+            document.getElementById('mTrackOrder').style.display = 'flex';
+        };
+        document.getElementById('btnAskOrderStatusWa').onclick = function() {
+            var code = document.getElementById('trackCodeDisplay').textContent;
+            window.open('https://wa.me/' + getWa() + '?text=' + encodeURIComponent('مرحباً مكتبة ياسين المولى، أرغب بالاستفسار عن حالة طلبي رقم: ' + code), '_blank');
+        };
+
+        // === ربط بقية الأدوات الثمانية ===
         function calcPrint() {
             var p = Math.max(1, parseInt(document.getElementById('inPcPages').value || '1', 10));
             var r = parseInt(document.getElementById('inPcType').value || '75', 10);
@@ -289,7 +505,6 @@
             window.open('https://wa.me/' + getWa() + '?text=' + encodeURIComponent(msg), '_blank');
         };
 
-        // 2. مكون الحقيبة
         document.getElementById('btnSmartBundle').onclick = function() { document.getElementById('mSmartBundle').style.display = 'flex'; };
         document.querySelectorAll('.b-preset').forEach(function(btn) {
             btn.onclick = function() {
@@ -298,7 +513,6 @@
             };
         });
 
-        // 3. الطلب الجماعي
         document.getElementById('btnGroupOrder').onclick = function() { document.getElementById('mGroupOrder').style.display = 'flex'; };
         document.getElementById('btnAddGoRow').onclick = function() {
             document.getElementById('goRowsContainer').insertAdjacentHTML('beforeend', '<div class="g-item-row" style="display:grid;grid-template-columns:1fr 1.3fr 90px;gap:6px;"><input type="text" placeholder="اسم الطالب" class="g-name" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;"><input type="text" placeholder="الملازم" class="g-desc" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;"><input type="number" placeholder="السعر" class="g-cost" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:0.85rem;"></div>');
@@ -321,14 +535,12 @@
         document.getElementById('mGroupOrder').addEventListener('input', calcGo);
         document.getElementById('waGoSend').onclick = function() { var t = calcGo(); if (t) window.open('https://wa.me/' + getWa() + '?text=' + encodeURIComponent(t), '_blank'); };
 
-        // 4. قائمة كاملة
         document.getElementById('btnBulkList').onclick = function() { document.getElementById('mBulkList').style.display = 'flex'; };
         document.getElementById('waBulkSend').onclick = function() {
             var txt = document.getElementById('inBulkText').value.trim(); if (!txt) return;
             window.open('https://wa.me/' + getWa() + '?text=' + encodeURIComponent('مرحباً مكتبة ياسين المولى، أرغب بتجهيز هذه القائمة:\n' + txt + '\n📍 العنوان: ' + document.getElementById('inBulkGov').value), '_blank');
         };
 
-        // 5. بطاقة الخدش
         document.getElementById('btnScratchCard').onclick = function() {
             var prizes = ['🎉 كبس حراري مجاني لملزمتك! (YASSIN-BIND)', '🔥 خصم 10% على طلبك! (STUDENT10)', '🎁 تغليف سبايرول مجاني! (SPIRAL-FREE)'];
             document.getElementById('outPrize').textContent = prizes[Math.floor(Math.random() * prizes.length)];
@@ -347,7 +559,6 @@
             window.open('https://wa.me/' + getWa() + '?text=' + encodeURIComponent('مرحباً مكتبة ياسين المولى، ربحت هدية من بطاقة الحظ: ' + document.getElementById('outPrize').textContent), '_blank');
         };
 
-        // 6. كاشف النواقص
         document.getElementById('btnChecklist').onclick = function() { document.getElementById('mChecklist').style.display = 'flex'; };
         document.getElementById('waMissingSend').onclick = function() {
             var miss = Array.from(document.querySelectorAll('#boxChecklist input:not(:checked)')).map(function(i) { return '• ' + i.value; });
@@ -355,16 +566,14 @@
             window.open('https://wa.me/' + getWa() + '?text=' + encodeURIComponent('مرحباً مكتبة ياسين المولى، هذه النواقص التي أحتاجها:\n' + miss.join('\n')), '_blank');
         };
 
-        // 7. طلب خاص
         document.getElementById('btnSpecialReq').onclick = function() { document.getElementById('mSpecialReq').style.display = 'flex'; };
         document.getElementById('waSrSend').onclick = function() {
             var b = document.getElementById('inSrBook').value.trim(); if (!b) return;
             window.open('https://wa.me/' + getWa() + '?text=' + encodeURIComponent('مرحباً مكتبة ياسين المولى، أطلب توفير: ' + b + ' - ' + document.getElementById('inSrTeacher').value), '_blank');
         };
 
-        // 8. مؤقت الدراسة
         var sec = 1500, iv = null;
-        function renderT() { var m = Math.floor(sec/60), s = sec%60; document.getElementById('outTimer').textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
+        function renderT() { var m = Math.floor(sec/60), s = Sec%60; document.getElementById('outTimer').textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
         document.getElementById('btnStudyTimer').onclick = function() { document.getElementById('mStudyTimer').style.display = 'flex'; };
         document.getElementById('t25').onclick = function() { clearInterval(iv); iv=null; sec=1500; renderT(); };
         document.getElementById('t50').onclick = function() { clearInterval(iv); iv=null; sec=3000; renderT(); };
@@ -374,8 +583,8 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', buildYassinProHub);
+        document.addEventListener('DOMContentLoaded', initYassinUltimatePlatform);
     } else {
-        buildYassinProHub();
+        initYassinUltimatePlatform();
     }
 })();
