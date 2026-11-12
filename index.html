@@ -697,5 +697,146 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(syncStickyCartLive, 400);
 })();
 </script>
+<script id="yassinSmartCartFix">
+(function() {
+    var trackedTotal = 0;
+
+    function getProductsMap() {
+        var map = {};
+        try {
+            var p1 = JSON.parse(localStorage.getItem('yassin_products') || '[]');
+            var p2 = JSON.parse(localStorage.getItem('products') || '[]');
+            var all = [].concat(p1, p2, Array.isArray(window.products) ? window.products : []);
+            all.forEach(function(p) {
+                if (p && p.id != null) map[String(p.id)] = Number(String(p.price || 0).replace(/\D/g, ''));
+                if (p && p.name) map[p.name.trim()] = Number(String(p.price || 0).replace(/\D/g, ''));
+            });
+        } catch(e) {}
+        return map;
+    }
+
+    function computeExactCart() {
+        var count = 0;
+        var total = 0;
+        var pMap = getProductsMap();
+
+        // 1. فحص جميع مفاتيح LocalStorage للعثور على السلة وحسابها حتى لو كانت تحفظ id فقط
+        for (var k = 0; k < localStorage.length; k++) {
+            var key = localStorage.key(k);
+            if (!key || key.toLowerCase().indexOf('cart') === -1) continue;
+            try {
+                var data = JSON.parse(localStorage.getItem(key));
+                if (Array.isArray(data)) {
+                    data.forEach(function(item) {
+                        if (!item) return;
+                        var q = Number(item.qty || item.quantity || item.count || 1);
+                        var p = Number(String(item.price || 0).replace(/\D/g, ''));
+                        if (!p && item.id != null && pMap[String(item.id)]) p = pMap[String(item.id)];
+                        if (!p && item.productId != null && pMap[String(item.productId)]) p = pMap[String(item.productId)];
+                        if (!p && item.name && pMap[item.name.trim()]) p = pMap[item.name.trim()];
+                        count += q;
+                        total += (p * q);
+                    });
+                    if (count > 0) break;
+                }
+            } catch(e) {}
+        }
+
+        // 2. قراءة العدد من أيقونة السلة العلوية إذا لم يكن في LocalStorage
+        var headerBadges = Array.from(document.querySelectorAll('header span, header div, nav span, nav div'));
+        if (count === 0) {
+            for (var i = 0; i < headerBadges.length; i++) {
+                var el = headerBadges[i];
+                if (el.children.length === 0 && /^\d+$/.test(el.textContent.trim())) {
+                    var parentText = (el.parentElement ? el.parentElement.textContent : '');
+                    if (parentText.indexOf('السلة') !== -1 || el.id.toLowerCase().indexOf('cart') !== -1 || el.className.toLowerCase().indexOf('cart') !== -1) {
+                        count = parseInt(el.textContent.trim(), 10);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 3. قراءة المجموع من أعلى الصفحة (مثل المربع الأسود في الهيدر) إن وُجد
+        if (total === 0) {
+            for (var j = 0; j < headerBadges.length; j++) {
+                var hEl = headerBadges[j];
+                var txt = hEl.textContent.trim();
+                if (hEl.children.length === 0 && /^\d[\d,]*\s*د\.ع$/.test(txt)) {
+                    var val = parseInt(txt.replace(/\D/g, '') || '0', 10);
+                    if (val > 0) { total = val; break; }
+                }
+            }
+        }
+
+        if (total === 0 && count > 0 && trackedTotal > 0) {
+            total = trackedTotal;
+        }
+        if (count === 0) trackedTotal = 0;
+
+        return { count: count, total: total };
+    }
+
+    // التقاط السعر مباشرة من بطاقة المنتج عند الضغط على "أضف إلى السلة"
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('button, a');
+        if (!btn) return;
+        var btnTxt = btn.textContent || '';
+        if (btnTxt.indexOf('أضف إلى السلة') !== -1 || btnTxt.indexOf('اضف الى السلة') !== -1) {
+            var card = btn.closest('.product-card, [class*="card"], [class*="product"], article, li') || btn.parentElement.parentElement;
+            if (card) {
+                var matches = card.textContent.match(/(\d[\d,]*)\s*د\.ع/g);
+                if (matches && matches.length) {
+                    var lastPrice = parseInt(matches[matches.length - 1].replace(/\D/g, '') || '0', 10);
+                    if (lastPrice > 0) trackedTotal += lastPrice;
+                }
+            }
+        }
+        setTimeout(updateBottomBarUI, 80);
+    }, true);
+
+    function updateBottomBarUI() {
+        var bottomBar = document.getElementById('stickyCartBar') || Array.from(document.querySelectorAll('div')).find(function(el) {
+            return el.style.position === 'fixed' && el.textContent.indexOf('مجموع مشترياتك') !== -1;
+        });
+        if (!bottomBar) return;
+
+        var info = computeExactCart();
+        bottomBar.style.display = info.count > 0 ? 'flex' : 'none';
+
+        bottomBar.querySelectorAll('span, div, b, strong').forEach(function(el) {
+            if (el.children.length > 0) return;
+            var t = el.textContent.trim();
+            if (/^\d+$/.test(t)) el.textContent = info.count;
+            if (t.indexOf('د.ع') !== -1) el.textContent = info.total.toLocaleString() + ' د.ع';
+        });
+
+        var actionBtn = bottomBar.querySelector('button');
+        if (actionBtn && !actionBtn.dataset.boundCart) {
+            actionBtn.dataset.boundCart = '1';
+            actionBtn.onclick = function(ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                // البحث عن زر السلة في أعلى الصفحة والضغط عليه
+                var topCartBtn = Array.from(document.querySelectorAll('header button, header a, nav button, nav a, [id*="cart" i], [class*="cart" i]')).find(function(el) {
+                    return el !== actionBtn && !bottomBar.contains(el) && (el.textContent.indexOf('السلة') !== -1 || el.id.toLowerCase().indexOf('cart') !== -1);
+                });
+                if (topCartBtn) {
+                    topCartBtn.click();
+                } else {
+                    var modal = document.querySelector('#cartModal, .cart-modal, #cartSidebar, .cart-drawer, [id*="cartModal" i]');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        modal.classList.add('active', 'open', 'show');
+                    }
+                }
+            };
+        }
+    }
+
+    setInterval(updateBottomBarUI, 350);
+})();
+</script>
 </body>
 </html>
+
