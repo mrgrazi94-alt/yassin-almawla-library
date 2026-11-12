@@ -536,6 +536,92 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-</body>
+// === إصلاح وربط شريط السلة السفلي الذكي بالسلة الحقيقية ===
+(function() {
+    function syncSmartBottomCart() {
+        // 1. البحث عن بيانات السلة في LocalStorage أو المتغيرات العامة
+        var cartItems = [];
+        try {
+            var keys = Object.keys(localStorage);
+            for (var i = 0; i < keys.length; i++) {
+                if (keys[i].toLowerCase().includes('cart')) {
+                    var parsed = JSON.parse(localStorage.getItem(keys[i]));
+                    if (Array.isArray(parsed)) { cartItems = parsed; break; }
+                }
+            }
+        } catch(e) {}
+
+        if (!cartItems.length && Array.isArray(window.cart)) {
+            cartItems = window.cart;
+        }
+
+        // 2. حساب العدد والمجموع الحقيقي
+        var totalCount = 0;
+        var totalPrice = 0;
+
+        cartItems.forEach(function(item) {
+            var qty = Number(item.qty || item.quantity || item.count || 1);
+            var price = Number(item.price || 0);
+            totalCount += qty;
+            totalPrice += (price * qty);
+        });
+
+        // خطة احتياطية: قراءة الرقم من أيقونة السلة العلوية إذا كانت السلة في الذاكرة المؤقتة
+        var topCartBadge = document.querySelector('#cartCount, .cart-count, .badge');
+        if (totalCount === 0 && topCartBadge) {
+            totalCount = parseInt(topCartBadge.textContent.replace(/\D/g, '') || '0', 10);
+        }
+        var topCartTotal = document.querySelector('#cartTotal, .cart-total');
+        if (totalPrice === 0 && topCartTotal) {
+            totalPrice = parseInt(topCartTotal.textContent.replace(/\D/g, '') || '0', 10);
+        }
+
+        // 3. تحديث شريط السلة السفلي
+        var bottomBar = document.getElementById('stickyCartBar') || document.querySelector('[style*="مجموع مشترياتك"]')?.closest('div[style*="fixed"]');
+        if (bottomBar) {
+            bottomBar.style.display = totalCount > 0 ? 'flex' : 'none';
+
+            // تحديث الرقم داخل المربع البرتقالي الصغير
+            var spans = bottomBar.querySelectorAll('span, div');
+            spans.forEach(function(el) {
+                var txt = el.textContent.trim();
+                if (/^\d+$/.test(txt) && el.children.length === 0) {
+                    el.textContent = totalCount;
+                }
+                if (txt.includes('د.ع') && el.children.length === 0) {
+                    el.textContent = totalPrice.toLocaleString() + ' د.ع';
+                }
+            });
+
+            // ربط زر "عرض السلة وإتمام الطلب" ليفتح نافذة السلة الأصلية
+            var openCartBtn = bottomBar.querySelector('button');
+            if (openCartBtn && !openCartBtn.dataset.fixed) {
+                openCartBtn.dataset.fixed = '1';
+                openCartBtn.onclick = function(e) {
+                    e.preventDefault();
+                    // محاولة فتح السلة بكل الطرق الممكنة في موقعك
+                    var headerCartBtn = document.querySelector('#cartBtn, .cart-btn, [onclick*="cart"], [onclick*="Cart"]');
+                    var cartModal = document.querySelector('#cartModal, .cart-modal, #cartSidebar, .cart-drawer');
+                    if (headerCartBtn) {
+                        headerCartBtn.click();
+                    } else if (typeof window.openCart === 'function') {
+                        window.openCart();
+                    } else if (typeof window.toggleCart === 'function') {
+                        window.toggleCart();
+                    } else if (cartModal) {
+                        cartModal.style.display = 'flex';
+                        cartModal.classList.add('active', 'open');
+                    }
+                };
+            }
+        }
+    }
+
+    // تشغيل المزامنة عند كل نقرة وفي الخلفية باستمرار
+    document.addEventListener('click', function() {
+        setTimeout(syncSmartBottomCart, 100);
+    });
+    setInterval(syncSmartBottomCart, 500);
+})();
 </body>
 </html>
