@@ -377,7 +377,7 @@
                     </div>
                     <div class="form-row-2">
                         <input type="text" id="newProdImg" class="pro-input" placeholder="رابط الصورة أو مسارها (images/1.jpg) *" required>
-                    <div style="margin-top:8px;"><label style="font-size:0.85rem;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-image"></i> أو اختر صورة مباشرة من جهازك: <input type="file" id="prodImgFile" accept="image/*" style="font-size:0.8rem;"></label></div>
+                    <div style="margin-top:8px;"><label style="font-size:0.85rem;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-image"></i> أو اختر صورة أو أكثر من جهازك: <input type="file" id="prodImgFile" accept="image/*" multiple style="font-size:0.8rem;"></label></div>
                         <input type="text" id="newProdVariants" class="pro-input" placeholder="خيارات (مفصولة بفاصلة: أزرق, أسود, أحمر)">
                     </div>
                     <input type="text" id="newProdDesc" class="pro-input" placeholder="وصف احترافي للمنتج *" required>
@@ -393,12 +393,65 @@
         </div>
     </div>
 
+    <!-- شريط السلة العائم أسفل الشاشة -->
+<div id="stickyCartBar" class="sticky-cart-bar hidden">
+    <div class="sticky-cart-info">
+        <span class="sticky-badge" id="stickyCartCount">0</span>
+        <div>
+            <div style="font-size:0.8rem;opacity:0.9;">إجمالي السلة</div>
+            <div style="font-weight:800;font-size:1.05rem;" id="stickyCartTotal">0 د.ع</div>
+        </div>
+    </div>
+    <button type="button" id="openStickyCartBtn" class="sticky-cart-btn">
+        <span>إتمام الطلب</span>
+        <i class="fas fa-arrow-left"></i>
+    </button>
+</div>
+
+<!-- نافذة حساب الزبون -->
+<div class="pro-modal-overlay" id="customerModal">
+    <div class="pro-modal-box" style="max-width:440px;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h3 style="margin:0;"><i class="fas fa-user-check" style="color:var(--accent);"></i> حسابي في مكتبة ياسين المولى</h3>
+            <button type="button" id="closeCustomerModal" class="icon-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="customerAuthForm" style="display:flex;flex-direction:column;gap:12px;">
+            <input type="text" id="custNameInput" placeholder="الاسم الكامل (مثال: علي حسين)" required class="form-input">
+            <input type="tel" id="custPhoneInput" placeholder="رقم الهاتف (077 / 078...)" required class="form-input">
+            <select id="custGovInput" class="form-input">
+                <option value="بغداد">بغداد</option>
+                <option value="البصرة">البصرة</option>
+                <option value="نينوى">نينوى</option>
+                <option value="أربيل">أربيل</option>
+                <option value="النجف">النجف</option>
+                <option value="كربلاء">كربلاء</option>
+                <option value="بابل">بابل</option>
+                <option value="الأنبار">الأنبار</option>
+                <option value="ديالى">ديالى</option>
+                <option value="ذي قار">ذي قار</option>
+                <option value="كركوك">كركوك</option>
+                <option value="صلاح الدين">صلاح الدين</option>
+                <option value="واسط">واسط</option>
+                <option value="ميسان">ميسان</option>
+                <option value="الديوانية">الديوانية</option>
+                <option value="المثنى">المثنى</option>
+                <option value="السليمانية">السليمانية</option>
+                <option value="دهوك">دهوك</option>
+            </select>
+            <input type="text" id="custAddressInput" placeholder="العنوان بالتفصيل (المنطقة / أقرب نقطة دالة)" required class="form-input">
+            <button type="submit" class="btn-primary" style="width:100%;padding:12px;border-radius:10px;font-weight:700;">حفظ وتفعيل الحساب</button>
+            <button type="button" id="logoutCustomerBtn" class="hidden" style="background:#ef4444;color:#fff;border:none;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;">تسجيل الخروج</button>
+        </form>
+    </div>
+</div>
+
     <div id="toastContainer" class="toast-stack"></div>
 
-    <script src="assets/js/security.js?v=6"></script>
-    <script src="assets/js/app.js?v=6"></script>
+    <script src="assets/js/security.js?v=7"></script>
+    <script src="assets/js/app.js?v=7"></script>
 </body>
 </html>
+
 
 
 

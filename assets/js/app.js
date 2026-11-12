@@ -444,3 +444,123 @@ document.addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
+
+// === تحديثات حساب الزبون + شريط السلة السفلي + صور متعددة ===
+(function initEnterpriseUpgrades() {
+    // 1. إدارة حساب الزبون
+    const accBtn = document.getElementById('customerAccountBtn');
+    const accModal = document.getElementById('customerModal');
+    const closeAcc = document.getElementById('closeCustomerModal');
+    const accForm = document.getElementById('customerAuthForm');
+    const logoutBtn = document.getElementById('logoutCustomerBtn');
+    const navName = document.getElementById('customerNavName');
+
+    function loadCustomerProfile() {
+        const saved = JSON.parse(localStorage.getItem('yassin_customer') || 'null');
+        if (saved && saved.name) {
+            if (navName) navName.textContent = 'أهلاً، ' + saved.name.split(' ')[0];
+            if (document.getElementById('custNameInput')) document.getElementById('custNameInput').value = saved.name;
+            if (document.getElementById('custPhoneInput')) document.getElementById('custPhoneInput').value = saved.phone || '';
+            if (document.getElementById('custGovInput')) document.getElementById('custGovInput').value = saved.gov || 'بغداد';
+            if (document.getElementById('custAddressInput')) document.getElementById('custAddressInput').value = saved.address || '';
+            logoutBtn?.classList.remove('hidden');
+
+            // تعبئة حقول السلة تلقائياً
+            const cartName = document.getElementById('custName');
+            const cartPhone = document.getElementById('custPhone');
+            const cartGov = document.getElementById('custGov');
+            const cartAddr = document.getElementById('custAddress');
+            if (cartName && !cartName.value) cartName.value = saved.name;
+            if (cartPhone && !cartPhone.value) cartPhone.value = saved.phone || '';
+            if (cartGov && saved.gov) cartGov.value = saved.gov;
+            if (cartAddr && !cartAddr.value) cartAddr.value = saved.address || '';
+        } else {
+            if (navName) navName.textContent = 'دخول / حساب';
+            logoutBtn?.classList.add('hidden');
+        }
+    }
+
+    accBtn?.addEventListener('click', () => { loadCustomerProfile(); accModal?.classList.add('active'); });
+    closeAcc?.addEventListener('click', () => accModal?.classList.remove('active'));
+    accForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const profile = {
+            name: document.getElementById('custNameInput').value.trim(),
+            phone: document.getElementById('custPhoneInput').value.trim(),
+            gov: document.getElementById('custGovInput').value,
+            address: document.getElementById('custAddressInput').value.trim()
+        };
+        localStorage.setItem('yassin_customer', JSON.stringify(profile));
+        loadCustomerProfile();
+        accModal?.classList.remove('active');
+        alert('✅ تم حفظ حسابك بنجاح! سيتم تعبئة بياناتك تلقائياً عند كل طلب.');
+    });
+    logoutBtn?.addEventListener('click', () => {
+        localStorage.removeItem('yassin_customer');
+        accForm?.reset();
+        loadCustomerProfile();
+        accModal?.classList.remove('active');
+    });
+
+    // 2. شريط السلة العائم أسفل الشاشة
+    const stickyBar = document.getElementById('stickyCartBar');
+    const stickyCount = document.getElementById('stickyCartCount');
+    const stickyTotal = document.getElementById('stickyCartTotal');
+    const openStickyBtn = document.getElementById('openStickyCartBtn');
+
+    openStickyBtn?.addEventListener('click', () => {
+        document.getElementById('cartBtn')?.click();
+        loadCustomerProfile();
+    });
+
+    setInterval(() => {
+        const badge = document.getElementById('cartCount');
+        const totalEl = document.getElementById('cartTotal');
+        const count = badge ? parseInt(badge.textContent || '0', 10) : 0;
+        if (stickyBar) {
+            if (count > 0) {
+                stickyBar.classList.remove('hidden');
+                if (stickyCount) stickyCount.textContent = count;
+                if (stickyTotal && totalEl) stickyTotal.textContent = totalEl.textContent;
+            } else {
+                stickyBar.classList.add('hidden');
+            }
+        }
+    }, 500);
+
+    // 3. دعم رفع وضغط أكثر من صورة للمنتج الواحد
+    document.addEventListener('change', async function(e) {
+        if (e.target && e.target.id === 'prodImgFile') {
+            const files = Array.from(e.target.files || []);
+            if (files.length === 0) return;
+            const compressedList = [];
+            for (const file of files) {
+                const b64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const maxW = 420;
+                            const scale = img.width > maxW ? (maxW / img.width) : 1;
+                            canvas.width = img.width * scale;
+                            canvas.height = img.height * scale;
+                            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                            resolve(canvas.toDataURL('image/jpeg', 0.72));
+                        };
+                        img.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+                compressedList.push(b64);
+            }
+            const urlInput = document.querySelector('#adminDashboardSection input[placeholder*="صورة"], #prodImg');
+            if (urlInput) {
+                urlInput.value = compressedList.join(' | ');
+                alert('✅ تم ضغط وتجهيز ' + compressedList.length + ' صورة بنجاح!');
+            }
+        }
+    });
+
+    loadCustomerProfile();
+})();
