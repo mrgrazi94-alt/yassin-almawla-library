@@ -847,232 +847,165 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- ============================================================ -->
 <!-- 🛒 نظام السلة الفاخرة والطلب المباشر الحصري للوحة الإدارة -->
 <!-- ============================================================ -->
-<style id="ym-modern-cart-css">
-    /* تحسين شكل نافذة السلة الجانبية (Cart Drawer) */
-    aside, #cartSidebar, .cart-drawer {
-        background: #ffffff !important;
-        box-shadow: -15px 0 45px rgba(15, 23, 42, 0.18) !important;
-        border-radius: 24px 0 0 24px !important;
-        font-family: 'Cairo', sans-serif !important;
+
+
+
+<style id="ym-clean-cart-style">
+    /* إخفاء أيقونة الواتساب من زر إتمام الطلب وتجميل الزر */
+    aside button .fa-whatsapp,
+    #cartSidebar button .fa-whatsapp,
+    aside button i[class*="whatsapp"],
+    #cartSidebar button i[class*="whatsapp"] {
+        display: none !important;
     }
-    aside h3, #cartSidebar h3 {
-        font-weight: 900 !important;
-        color: #0f172a !important;
-        font-size: 1.25rem !important;
-    }
-    /* صندوق الإدخال المباشر داخل السلة */
+    /* ضمان عدم وجود أي صندوق مكرر */
     #ym-inline-checkout-box {
-        background: #f8fafc;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 14px;
-        margin-top: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 9px;
-    }
-    #ym-inline-checkout-box input,
-    #ym-inline-checkout-box select {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        font-size: 0.88rem;
-        font-family: inherit;
-        background: #fff;
-        color: #0f172a;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-    #ym-inline-checkout-box input:focus,
-    #ym-inline-checkout-box select:focus {
-        border-color: #f25011;
-    }
-    #ym-direct-order-submit {
-        width: 100%;
-        background: linear-gradient(135deg, #f25011, #ea580c) !important;
-        color: #ffffff !important;
-        border: none !important;
-        padding: 13px !important;
-        border-radius: 12px !important;
-        font-weight: 800 !important;
-        font-size: 0.98rem !important;
-        cursor: pointer !important;
-        box-shadow: 0 8px 20px rgba(242, 80, 17, 0.28) !important;
-        transition: transform 0.2s, box-shadow 0.2s !important;
-        margin-top: 4px;
-    }
-    #ym-direct-order-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 25px rgba(242, 80, 17, 0.38) !important;
-    }
-    /* إخفاء أزرار طلب الواتساب القديمة داخل السلة نهائياً */
-    aside a[href*="wa.me"], #cartSidebar a[href*="wa.me"],
-    aside button[onclick*="whatsapp" i], #cartSidebar button[onclick*="whatsapp" i] {
         display: none !important;
     }
 </style>
 
-<script id="ym-exclusive-direct-cart">
+<script id="ym-direct-firebase-hook">
 (function() {
     var DB_URL = 'https://yassin-library-default-rtdb.firebaseio.com/orders.json';
 
-    // 1. حظر فتح روابط الواتساب الناتجة عن إتمام الطلبات برمجياً
-    var origWindowOpen = window.open;
+    // 1. منع فتح واتساب للطلبات نهائياً
+    var origOpen = window.open;
     window.open = function(url) {
-        if (typeof url === 'string' && (url.indexOf('wa.me') !== -1 || url.indexOf('whatsapp.com') !== -1)) {
-            if (url.indexOf('text=') !== -1) {
-                console.log('تم حظر تحويل الطلب إلى واتساب وتحويله لنظام الإدارة المباشر.');
-                return null;
-            }
+        if (typeof url === 'string' && (url.indexOf('wa.me') !== -1 || url.indexOf('whatsapp.com') !== -1) && url.indexOf('text=') !== -1) {
+            return null;
         }
-        return origWindowOpen.apply(this, arguments);
+        return origOpen.apply(this, arguments);
     };
 
-    // 2. قراءة السلة الحقيقية وحساب المجموع بدقة
+    // 2. قراءة السلة الحقيقية
     function getCartItems() {
-        var found = [];
         for (var k = 0; k < localStorage.length; k++) {
             var key = localStorage.key(k);
             if (!key || key.indexOf('product') !== -1 || key.indexOf('admin') !== -1) continue;
             try {
                 var arr = JSON.parse(localStorage.getItem(key));
                 if (Array.isArray(arr) && arr.length > 0 && arr[0] && (arr[0].name || arr[0].price)) {
-                    found = arr;
-                    break;
+                    return arr;
                 }
             } catch(e) {}
         }
-        return found;
+        return [];
     }
 
-    // 3. حقن نموذج الطلب المباشر الفاخر داخل السلة الجانبية واستبدال زر الواتساب
-    function upgradeCartDrawer() {
+    // 3. ربط الزر الأصلي داخل السلة بإرسال الطلب إلى لوحة الإدارة مباشرة
+    function hookOriginalCartButton() {
         var drawer = document.querySelector('aside, #cartSidebar, .cart-drawer');
         if (!drawer) return;
 
-        // إخفاء أي زر قديم مكتوب عليه واتساب داخل السلة
-        drawer.querySelectorAll('button, a').forEach(function(el) {
-            if (el.id === 'ym-direct-order-submit') return;
-            var t = (el.textContent || '').trim();
-            if (t.indexOf('واتساب') !== -1 || t.indexOf('إتمام الطلب') !== -1) {
-                el.style.display = 'none';
+        var buttons = drawer.querySelectorAll('button');
+        buttons.forEach(function(btn) {
+            var txt = (btn.textContent || '').trim();
+            if (txt.indexOf('إرسال الطلب') !== -1 || txt.indexOf('تأكيد الفاتورة') !== -1) {
+                if (!btn.dataset.ymHooked) {
+                    btn.dataset.ymHooked = '1';
+                    btn.style.background = 'linear-gradient(135deg, #f25011, #ea580c)';
+                    btn.innerHTML = '🚀 تأكيد وإرسال الطلب للمكتبة';
+
+                    // استبدال مستمع الحدث القديم بالكامل عبر نسخ الزر
+                    var cleanBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(cleanBtn, btn);
+
+                    cleanBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        sendDirectOrderFromOriginalFields(drawer, cleanBtn);
+                    });
+                }
+            }
+        });
+    }
+
+    function sendDirectOrderFromOriginalFields(drawer, btn) {
+        var items = getCartItems();
+        if (!items.length) {
+            alert('السلة فارغة! أضف منتجاً واحداً على الأقل.');
+            return;
+        }
+
+        // جلب البيانات من الحقول الأصلية الموجودة في السلة
+        var inputs = Array.from(drawer.querySelectorAll('input:not([placeholder*="الخصم"]), select'));
+        var name = '', phone = '', gov = '', addr = '';
+
+        inputs.forEach(function(el) {
+            var ph = (el.getAttribute('placeholder') || '') + ' ' + (el.id || '') + ' ' + (el.name || '');
+            var val = (el.value || '').trim();
+            if (el.tagName === 'SELECT') {
+                gov = el.options[el.selectedIndex] ? el.options[el.selectedIndex].text.split('(')[0].trim() : val;
+            } else if (ph.indexOf('الاسم') !== -1 || ph.toLowerCase().indexOf('name') !== -1) {
+                name = val;
+            } else if (ph.indexOf('الهاتف') !== -1 || ph.indexOf('07') !== -1 || ph.toLowerCase().indexOf('phone') !== -1) {
+                phone = val;
+            } else if (ph.indexOf('العنوان') !== -1 || ph.indexOf('المنطقة') !== -1 || ph.toLowerCase().indexOf('addr') !== -1) {
+                addr = val;
             }
         });
 
-        // حقن واجهة الطلب المباشر إذا لم تكن موجودة
-        if (!document.getElementById('ym-inline-checkout-box')) {
-            var box = document.createElement('div');
-            box.id = 'ym-inline-checkout-box';
-            box.innerHTML = `
-                <div style="font-weight:800;font-size:0.92rem;color:#0f172a;display:flex;align-items:center;gap:6px;">
-                    <span>🚀</span> <span>بيانات التوصيل المباشر (بدون واتساب)</span>
-                </div>
-                <input type="text" id="ymCartName" placeholder="الاسم الثلاثي للزبون *">
-                <input type="tel" id="ymCartPhone" placeholder="رقم الهاتف (077xxxxxxxx) *" dir="ltr" style="text-align:right;">
-                <select id="ymCartGov">
-                    <option value="بغداد">بغداد (توصيل 4,000 د.ع)</option>
-                    <option value="البصرة">البصرة (توصيل 5,000 د.ع)</option>
-                    <option value="نينوى">نينوى (توصيل 5,000 د.ع)</option>
-                    <option value="النجف">النجف (توصيل 5,000 د.ع)</option>
-                    <option value="كربلاء">كربلاء (توصيل 5,000 د.ع)</option>
-                    <option value="بابل">بابل (توصيل 5,000 د.ع)</option>
-                    <option value="الأنبار">الأنبار (توصيل 5,000 د.ع)</option>
-                    <option value="ديالى">ديالى (توصيل 5,000 د.ع)</option>
-                    <option value="كركوك">كركوك (توصيل 5,000 د.ع)</option>
-                    <option value="صلاح الدين">صلاح الدين (توصيل 5,000 د.ع)</option>
-                    <option value="ذي قار">ذي قار (توصيل 5,000 د.ع)</option>
-                    <option value="واسط">واسط (توصيل 5,000 د.ع)</option>
-                    <option value="القادسية">القادسية (توصيل 5,000 د.ع)</option>
-                    <option value="ميسان">ميسان (توصيل 5,000 د.ع)</option>
-                    <option value="المثنى">المثنى (توصيل 5,000 د.ع)</option>
-                    <option value="أربيل">أربيل (توصيل 5,000 د.ع)</option>
-                    <option value="السليمانية">السليمانية (توصيل 5,000 د.ع)</option>
-                    <option value="دهوك">دهوك (توصيل 5,000 د.ع)</option>
-                </select>
-                <input type="text" id="ymCartAddr" placeholder="المنطقة والشارع وأقرب نقطة دالة *">
-                <input type="text" id="ymCartNotes" placeholder="ملاحظات إضافية (اختياري)">
-                <button type="button" id="ym-direct-order-submit">✅ تأكيد وإرسال الطلب للمكتبة</button>
-            `;
-            drawer.appendChild(box);
-
-            document.getElementById('ym-direct-order-submit').onclick = submitOrderToAdminPanel;
-        }
-    }
-
-    function submitOrderToAdminPanel() {
-        var items = getCartItems();
-        if (!items.length) {
-            alert('سلة المشتريات فارغة! أضف منتجاً واحداً على الأقل.');
+        if (!name || !phone || !addr || !gov || gov.indexOf('اختر') !== -1) {
+            alert('يرجى ملء الاسم الكامل، رقم الهاتف، المحافظة، والعنوان بالتفصيل.');
             return;
         }
 
-        var name = document.getElementById('ymCartName').value.trim();
-        var phone = document.getElementById('ymCartPhone').value.trim();
-        var gov = document.getElementById('ymCartGov').value;
-        var addr = document.getElementById('ymCartAddr').value.trim();
-        var notes = document.getElementById('ymCartNotes').value.trim();
+        // قراءة الإجمالي النهائي المعروض في السلة (شامل الخصم والتوصيل المجاني)
+        var finalTotal = 0;
+        drawer.querySelectorAll('div, span, b, strong').forEach(function(el) {
+            if (el.children.length === 0 && el.textContent.indexOf('د.ع') !== -1) {
+                var num = parseInt(el.textContent.replace(/\D/g, '') || '0', 10);
+                if (num > 0) finalTotal = num;
+            }
+        });
 
-        if (!name || !phone || !addr) {
-            alert('يرجى إدخال الاسم ورقم الهاتف والعنوان الكامل لإرسال الطلب.');
-            return;
-        }
-
-        var btn = document.getElementById('ym-direct-order-submit');
-        btn.disabled = true;
-        btn.textContent = '⏳ جاري إرسال طلبك للوحة الإدارة...';
-
-        var subTotal = 0;
         var itemsSummary = items.map(function(it) {
             var q = Number(it.qty || it.quantity || 1);
-            var p = Number(String(it.price || 0).replace(/\D/g, ''));
-            subTotal += (p * q);
             return (it.name || 'منتج') + ' (×' + q + ')';
         }).join(' + ');
 
-        var deliveryFee = subTotal >= 50000 ? 0 : (gov === 'بغداد' ? 4000 : 5000);
-        var grandTotal = subTotal + deliveryFee;
         var orderCode = 'YM-' + Math.floor(1000 + Math.random() * 9000);
 
-        var payload = {
-            id: orderCode,
-            name: name,
-            phone: phone,
-            addr: gov + ' - ' + addr,
-            items: itemsSummary,
-            total: grandTotal,
-            notes: notes,
-            status: 'جديد',
-            date: new Date().toLocaleString('ar-IQ'),
-            timestamp: Date.now()
-        };
+        btn.disabled = true;
+        btn.textContent = '⏳ جاري إرسال طلبك للمكتبة...';
 
         fetch(DB_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                id: orderCode,
+                name: name,
+                phone: phone,
+                addr: gov + ' - ' + addr,
+                items: itemsSummary,
+                total: finalTotal,
+                notes: '',
+                status: 'جديد',
+                date: new Date().toLocaleString('ar-IQ'),
+                timestamp: Date.now()
+            })
         })
         .then(function(res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            // تفريغ السلة بعد الإرسال الناجح
+            if (!res.ok) throw new Error('Network error');
             for (var k = 0; k < localStorage.length; k++) {
                 var key = localStorage.key(k);
                 if (key && key.toLowerCase().indexOf('cart') !== -1) localStorage.removeItem(key);
             }
-            alert('🎉 تم إرسال طلبك بنجاح إلى مكتبة ياسين المولى!\n\nرقم الطلب: #' + orderCode + '\nالمبلغ الإجمالي: ' + grandTotal.toLocaleString() + ' د.ع\nسيتواصل معك فريقنا لتأكيد التوصيل.');
+            alert('🎉 تم استلام طلبك بنجاح في مكتبة ياسين المولى!\n\nرقم الطلب: #' + orderCode + '\nالإجمالي: ' + finalTotal.toLocaleString() + ' د.ع\nسيتواصل معك فريق التجهيز قريباً.');
             location.reload();
         })
         .catch(function() {
-            alert('تعذر الاتصال بقاعدة البيانات، يرجى التأكد من الإنترنت والمحاولة مرة أخرى.');
+            alert('حدث خطأ في الاتصال، يرجى المحاولة مرة أخرى.');
             btn.disabled = false;
-            btn.textContent = '✅ تأكيد وإرسال الطلب للمكتبة';
+            btn.textContent = '🚀 تأكيد وإرسال الطلب للمكتبة';
         });
     }
 
-    setInterval(upgradeCartDrawer, 400);
-    window.addEventListener('DOMContentLoaded', upgradeCartDrawer);
+    setInterval(hookOriginalCartButton, 350);
+    window.addEventListener('DOMContentLoaded', hookOriginalCartButton);
 })();
 </script>
 </body>
 </html>
+
 
