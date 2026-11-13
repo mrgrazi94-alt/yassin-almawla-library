@@ -6,16 +6,22 @@
     var DB_PRODS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/products.json';
     var origFetch = window.fetch;
 
-    // اعتراض طلب ملف data/products.json وتحويله لقاعدة البيانات الحية إذا توفرت فيها منتجات
     window.fetch = function(resource, init) {
         if (typeof resource === 'string' && resource.indexOf('products.json') !== -1 && resource.indexOf('firebaseio.com') === -1) {
             return origFetch(DB_PRODS_URL + '?t=' + Date.now())
                 .then(function(res) { return res.json(); })
                 .then(function(cloudData) {
                     if (Array.isArray(cloudData) && cloudData.length > 0) {
-                        localStorage.setItem('yassin_products', JSON.stringify(cloudData));
-                        localStorage.setItem('products', JSON.stringify(cloudData));
-                        return new Response(JSON.stringify(cloudData), {
+                        var oldStr = localStorage.getItem('yassin_products');
+                        var newStr = JSON.stringify(cloudData);
+                        localStorage.setItem('yassin_products', newStr);
+                        localStorage.setItem('products', newStr);
+                        // إعادة تحميل الواجهة مرة واحدة إذا تغيرت المنتجات عن الكاش القديم
+                        if (oldStr && oldStr !== newStr && !sessionStorage.getItem('ym_synced_once')) {
+                            sessionStorage.setItem('ym_synced_once', '1');
+                            setTimeout(function() { location.reload(); }, 150);
+                        }
+                        return new Response(newStr, {
                             status: 200,
                             headers: { 'Content-Type': 'application/json' }
                         });
@@ -30,6 +36,7 @@
     };
 })();
 </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -949,6 +956,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
 
