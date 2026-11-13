@@ -852,6 +852,73 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(mirrorNow, 250);
 })();
 </script>
+<script id="ymFixBottomOpenBtn">
+(function() {
+    function openCartDrawerDirectly() {
+        // 1. محاولة الضغط على زر السلة الحقيقي في الهيدر
+        var headerBtns = Array.from(document.querySelectorAll('header button, header a, nav button, nav a'));
+        var realCartBtn = headerBtns.find(function(el) {
+            var t = (el.textContent || '');
+            return t.indexOf('السلة') !== -1 || (el.id || '').toLowerCase().indexOf('cart') !== -1 || (el.className || '').toLowerCase().indexOf('cart') !== -1;
+        });
+        if (realCartBtn) {
+            realCartBtn.click();
+        }
+
+        // 2. فتح السلة الجانبية (aside) والطبقة المعتمة التي تسبقها مباشرة كضمان إضافي
+        var asideDrawer = document.querySelector('aside, #cartSidebar, .cart-drawer');
+        if (asideDrawer) {
+            asideDrawer.style.display = 'flex';
+            asideDrawer.style.visibility = 'visible';
+            asideDrawer.style.opacity = '1';
+            asideDrawer.style.transform = 'translateX(0)';
+            asideDrawer.style.right = '0';
+            asideDrawer.classList.add('active', 'open', 'show');
+
+            var prevOverlay = asideDrawer.previousElementSibling;
+            if (prevOverlay && prevOverlay.tagName === 'DIV') {
+                prevOverlay.style.display = 'block';
+                prevOverlay.style.visibility = 'visible';
+                prevOverlay.style.opacity = '1';
+                prevOverlay.classList.add('active', 'open', 'show');
+            }
+        }
+    }
+
+    function bindBottomBar() {
+        var bottomBar = Array.from(document.querySelectorAll('div')).find(function(el) {
+            var st = window.getComputedStyle(el);
+            return st.position === 'fixed' && (el.textContent || '').indexOf('مجموع مشترياتك') !== -1;
+        });
+        if (!bottomBar) return;
+
+        // رفع الشريط السفلي فوق أي طبقة شفافة قد تمنع النقر
+        bottomBar.style.zIndex = '99998';
+        bottomBar.style.pointerEvents = 'auto';
+
+        var orangeBtn = bottomBar.querySelector('button');
+        if (orangeBtn && !orangeBtn.dataset.ymFixedOpen) {
+            orangeBtn.dataset.ymFixedOpen = '1';
+            orangeBtn.style.cursor = 'pointer';
+            orangeBtn.style.pointerEvents = 'auto';
+
+            // إزالة أي مستمع قديم وربط الفتح المباشر
+            var newBtn = orangeBtn.cloneNode(true);
+            orangeBtn.parentNode.replaceChild(newBtn, orangeBtn);
+
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openCartDrawerDirectly();
+            });
+        }
+    }
+
+    setInterval(bindBottomBar, 300);
+    window.addEventListener('DOMContentLoaded', bindBottomBar);
+})();
+</script>
 </body>
 </html>
+
 
