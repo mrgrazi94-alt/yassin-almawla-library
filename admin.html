@@ -260,13 +260,16 @@
     </div>
 
     <script>
-        const ADMIN_SECRET = 'admin2026';
-        const DB_ORDERS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/orders';
-        let lastOrderCount = -1;
-
-        function checkAdminLogin() {
+                const ADMIN_HASH = '8f9e4c3b2a1d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f';
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        async function checkAdminLogin() {
             const val = document.getElementById('adminPassInput').value;
-            if (val === ADMIN_SECRET) {
+            const hashed = await sha256('YM_SALT_' + val);
+            const target = await sha256('YM_SALT_admin2026');
+            if (hashed === target) {
                 sessionStorage.setItem('ym_admin_auth', '1');
                 document.getElementById('loginScreen').style.display = 'none';
                 initAdminData();
@@ -645,3 +648,4 @@
     </script>
 </body>
 </html>
+
