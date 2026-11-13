@@ -557,7 +557,48 @@
                 '<p style="font-size:15px;"><b>العنوان الكامل:</b> ' + addr + '</p>',
                 notes ? '<p style="font-size:13px;"><b>ملاحظات:</b> ' + notes + '</p>' : '',
                 '<div style="background:#000;color:#fff;padding:12px;text-align:center;font-size:18px;font-weight:bold;margin-top:14px;">المبلغ المطلوب عند الاستلام: ' + Number(amount).toLocaleString() + ' د.ع</div>',
-                '</body></html>'
+                '<script id="ymAdminLiveProductsSync">
+(function() {
+    var DB_PRODS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/products.json';
+
+    // مزامنة المنتجات من السحابة عند فتح لوحة الإدارة
+    window.addEventListener('DOMContentLoaded', function() {
+        fetch(DB_PRODS_URL + '?t=' + Date.now())
+            .then(function(r) { return r.json(); })
+            .then(function(cloudProds) {
+                if (Array.isArray(cloudProds) && cloudProds.length > 0) {
+                    localStorage.setItem('yassin_products', JSON.stringify(cloudProds));
+                    localStorage.setItem('products', JSON.stringify(cloudProds));
+                    if (typeof renderProductsAdmin === 'function') renderProductsAdmin();
+                }
+            })
+            .catch(function() {});
+    });
+
+    // اعتراض دالة حفظ المنتجات لرفعها فوراً إلى Firebase
+    var origSaveProducts = window.saveProducts;
+    window.saveProducts = function(arr, rerender) {
+        if (typeof origSaveProducts === 'function') {
+            origSaveProducts(arr, rerender);
+        } else {
+            localStorage.setItem('yassin_products', JSON.stringify(arr));
+            localStorage.setItem('products', JSON.stringify(arr));
+        }
+        fetch(DB_PRODS_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(arr)
+        })
+        .then(function(res) {
+            if (res.ok) console.log('✅ تم نشر المنتجات في المتجر الحي فوراً!');
+        })
+        .catch(function() {
+            alert('⚠️ تم الحفظ محلياً لكن تعذر الرفع للسحابة، تأكد من الإنترنت.');
+        });
+    };
+})();
+</script>
+</body></html>'
             ];
             w.document.write(htmlParts.join(''));
             w.document.close();
@@ -646,6 +687,48 @@
             reader.readAsText(file);
         }
     </script>
+<script id="ymAdminLiveProductsSync">
+(function() {
+    var DB_PRODS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/products.json';
+
+    // مزامنة المنتجات من السحابة عند فتح لوحة الإدارة
+    window.addEventListener('DOMContentLoaded', function() {
+        fetch(DB_PRODS_URL + '?t=' + Date.now())
+            .then(function(r) { return r.json(); })
+            .then(function(cloudProds) {
+                if (Array.isArray(cloudProds) && cloudProds.length > 0) {
+                    localStorage.setItem('yassin_products', JSON.stringify(cloudProds));
+                    localStorage.setItem('products', JSON.stringify(cloudProds));
+                    if (typeof renderProductsAdmin === 'function') renderProductsAdmin();
+                }
+            })
+            .catch(function() {});
+    });
+
+    // اعتراض دالة حفظ المنتجات لرفعها فوراً إلى Firebase
+    var origSaveProducts = window.saveProducts;
+    window.saveProducts = function(arr, rerender) {
+        if (typeof origSaveProducts === 'function') {
+            origSaveProducts(arr, rerender);
+        } else {
+            localStorage.setItem('yassin_products', JSON.stringify(arr));
+            localStorage.setItem('products', JSON.stringify(arr));
+        }
+        fetch(DB_PRODS_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(arr)
+        })
+        .then(function(res) {
+            if (res.ok) console.log('✅ تم نشر المنتجات في المتجر الحي فوراً!');
+        })
+        .catch(function() {
+            alert('⚠️ تم الحفظ محلياً لكن تعذر الرفع للسحابة، تأكد من الإنترنت.');
+        });
+    };
+})();
+</script>
 </body>
 </html>
+
 
