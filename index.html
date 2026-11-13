@@ -613,150 +613,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<script id="yassinSmartCartFix">
-(function() {
-    var cachedProducts = [];
 
-    // تحميل المنتجات من data/products.json أو LocalStorage لضمان معرفة سعر كل ID
-    fetch('data/products.json?v=' + Date.now())
-        .then(function(r) { return r.ok ? r.json() : []; })
-        .then(function(data) { if (Array.isArray(data)) cachedProducts = data; })
-        .catch(function() {});
-
-    function buildPriceLookup() {
-        var map = {};
-        var sources = [cachedProducts];
-        try {
-            for (var i = 0; i < localStorage.length; i++) {
-                var val = JSON.parse(localStorage.getItem(localStorage.key(i)));
-                if (Array.isArray(val)) sources.push(val);
-            }
-        } catch(e) {}
-        if (Array.isArray(window.products)) sources.push(window.products);
-
-        sources.forEach(function(arr) {
-            arr.forEach(function(item) {
-                if (!item || typeof item !== 'object') return;
-                var price = Number(String(item.price || 0).replace(/\D/g, ''));
-                if (price > 0) {
-                    if (item.id != null) map[String(item.id)] = price;
-                    if (item.name) map[item.name.trim()] = price;
-                }
-            });
-        });
-        return map;
-    }
-
-    function calculateCartFromEverything() {
-        var priceMap = buildPriceLookup();
-        var bestCount = 0;
-        var bestTotal = 0;
-
-        // 1. فحص جميع مفاتيح LocalStorage دون استثناء
-        for (var k = 0; k < localStorage.length; k++) {
-            var key = localStorage.key(k);
-            // تجاهل مفاتيح المنتجات والطلبات المؤرشفة
-            if (!key || key.indexOf('product') !== -1 || key.indexOf('admin') !== -1) continue;
-            try {
-                var data = JSON.parse(localStorage.getItem(key));
-                if (Array.isArray(data) && data.length > 0) {
-                    var c = 0, t = 0;
-                    data.forEach(function(entry) {
-                        if (!entry || typeof entry !== 'object') return;
-                        var qty = Number(entry.qty || entry.quantity || entry.count || entry.amount || 1);
-                        var unitPrice = Number(String(entry.price || 0).replace(/\D/g, ''));
-                        if (!unitPrice && entry.id != null) unitPrice = priceMap[String(entry.id)] || 0;
-                        if (!unitPrice && entry.productId != null) unitPrice = priceMap[String(entry.productId)] || 0;
-                        if (!unitPrice && entry.name) unitPrice = priceMap[entry.name.trim()] || 0;
-                        if (unitPrice > 0) {
-                            c += qty;
-                            t += (unitPrice * qty);
-                        }
-                    });
-                    if (t > bestTotal) {
-                        bestTotal = t;
-                        bestCount = c;
-                    }
-                }
-            } catch(e) {}
-        }
-
-        // 2. قراءة المجموع مباشرة من داخل نافذة/قائمة السلة المخفية في الصفحة (DOM)
-        if (bestTotal === 0) {
-            var cartContainer = document.querySelector('#cartItems, .cart-items, #cartModal, .cart-modal, #cartSidebar, .cart-drawer');
-            if (cartContainer) {
-                var totalNode = cartContainer.querySelector('#cartTotal, .cart-total, [id*="total" i], [class*="total" i]');
-                if (totalNode) {
-                    var domTotal = parseInt(totalNode.textContent.replace(/\D/g, '') || '0', 10);
-                    if (domTotal > 0) bestTotal = domTotal;
-                }
-            }
-        }
-
-        // 3. قراءة العدد من شارة السلة في الهيدر
-        var headerBadge = document.querySelector('#cartCount, .cart-count, header .badge, nav .badge');
-        if (headerBadge) {
-            var hCount = parseInt(headerBadge.textContent.replace(/\D/g, '') || '0', 10);
-            if (hCount > 0) bestCount = hCount;
-        }
-
-        return { count: bestCount, total: bestTotal };
-    }
-
-    function syncBarNow() {
-        var bottomBar = document.getElementById('stickyCartBar') || Array.from(document.querySelectorAll('div')).find(function(el) {
-            return el.style.position === 'fixed' && el.textContent.indexOf('مجموع مشترياتك') !== -1;
-        });
-        if (!bottomBar) return;
-
-        var res = calculateCartFromEverything();
-        bottomBar.style.display = res.count > 0 ? 'flex' : 'none';
-
-        // تحديث نص السعر والعدد بدقة
-        var allLeafs = bottomBar.querySelectorAll('span, div, b, strong');
-        allLeafs.forEach(function(el) {
-            if (el.children.length > 0) return;
-            var txt = el.textContent.trim();
-            if (/^\d+$/.test(txt)) {
-                el.textContent = res.count;
-            } else if (txt.indexOf('د.ع') !== -1) {
-                el.textContent = res.total.toLocaleString() + ' د.ع';
-            }
-        });
-
-        // ربط زر الفتح بنافذة السلة الأصلية
-        var btn = bottomBar.querySelector('button');
-        if (btn && !btn.dataset.superLinked) {
-            btn.dataset.superLinked = '1';
-            btn.onclick = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var topBtn = (headerBadge && headerBadge.closest('button, a, div[onclick]')) ||
-                             document.querySelector('#cartBtn, .cart-btn, [onclick*="cart" i]');
-                if (topBtn) {
-                    topBtn.click();
-                } else {
-                    var modal = document.querySelector('#cartModal, .cart-modal, #cartSidebar, .cart-drawer');
-                    if (modal) {
-                        modal.style.display = 'flex';
-                        modal.classList.add('active', 'open', 'show');
-                    }
-                }
-            };
-        }
-    }
-
-    // اعتراض أي عملية حفظ في localStorage لتحديث الشريط في نفس اللحظة
-    var origSetItem = localStorage.setItem;
-    localStorage.setItem = function(k, v) {
-        origSetItem.apply(this, arguments);
-        setTimeout(syncBarNow, 30);
-    };
-
-    setInterval(syncBarNow, 350);
-    window.addEventListener('load', syncBarNow);
-})();
-</script>
 
 <!-- ============================================================ -->
 <!-- 🛒 نظام السلة الفاخرة والطلب المباشر الحصري للوحة الإدارة -->
@@ -919,5 +776,82 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('DOMContentLoaded', hookOriginalCartButton);
 })();
 </script>
+<script id="ymMirrorHeaderCart">
+(function() {
+    function findTopCartWidget() {
+        // البحث عن المربع الأسود في الهيدر الذي يحتوي على كلمة "السلة" و "د.ع"
+        var candidates = Array.from(document.querySelectorAll('header button, header a, header div, nav button, nav a, nav div'));
+        return candidates.find(function(el) {
+            var t = (el.textContent || '').trim();
+            return t.indexOf('السلة') !== -1 && t.indexOf('د.ع') !== -1 && el.offsetHeight > 20 && el.offsetHeight < 90;
+        });
+    }
+
+    function findBottomCartBar() {
+        return Array.from(document.querySelectorAll('div')).find(function(el) {
+            var st = window.getComputedStyle(el);
+            return st.position === 'fixed' && (el.textContent || '').indexOf('مجموع مشترياتك') !== -1;
+        });
+    }
+
+    function mirrorNow() {
+        var topBox = findTopCartWidget();
+        var bottomBar = findBottomCartBar();
+        if (!topBox || !bottomBar) return;
+
+        // 1. استخراج العدد والمبلغ من المربع الأسود العلوي مباشرة
+        var topText = topBox.innerText || topBox.textContent || '';
+        var priceMatch = topText.match(/(\d[\d,]*)\s*د\.ع/);
+        var totalPriceText = priceMatch ? (priceMatch[1] + ' د.ع') : '0 د.ع';
+        var numericPrice = priceMatch ? parseInt(priceMatch[1].replace(/\D/g, '') || '0', 10) : 0;
+
+        // استخراج عدد القطع (الرقم المنفصل في المربع العلوي)
+        var countNum = 0;
+        topBox.querySelectorAll('span, div, b, strong').forEach(function(node) {
+            if (node.children.length === 0) {
+                var s = node.textContent.trim();
+                if (/^\d+$/.test(s)) countNum = parseInt(s, 10);
+            }
+        });
+        if (countNum === 0 && numericPrice > 0) countNum = 1;
+
+        // 2. إظهار أو إخفاء الشريط السفلي حسب وجود منتجات
+        bottomBar.style.display = (countNum > 0 || numericPrice > 0) ? 'flex' : 'none';
+
+        // 3. تحديث الرقم داخل المربع البرتقالي الصغير وتحديث السعر بجانب "مجموع مشترياتك"
+        bottomBar.querySelectorAll('span, div, b, strong').forEach(function(el) {
+            if (el.children.length > 0) return;
+            var txt = el.textContent.trim();
+            if (/^\d+$/.test(txt)) {
+                el.textContent = countNum;
+            } else if (txt.indexOf('د.ع') !== -1) {
+                el.textContent = totalPriceText;
+            }
+        });
+
+        // 4. ربط زر "عرض السلة وإتمام الطلب" ليضغط على المربع الأسود العلوي مباشرة
+        var openBtn = bottomBar.querySelector('button');
+        if (openBtn && !openBtn.dataset.mirroredClick) {
+            openBtn.dataset.mirroredClick = '1';
+            openBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                topBox.click();
+            });
+        }
+    }
+
+    // مراقبة فورية لأي تغيير يحدث في المربع العلوي (بدون تأخير)
+    window.addEventListener('DOMContentLoaded', function() {
+        mirrorNow();
+        var topBox = findTopCartWidget();
+        if (topBox) {
+            new MutationObserver(mirrorNow).observe(topBox, { childList: true, subtree: true, characterData: true });
+        }
+    });
+    setInterval(mirrorNow, 250);
+})();
+</script>
 </body>
 </html>
+
