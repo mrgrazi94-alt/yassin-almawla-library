@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -22,7 +22,6 @@
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; }
         body { margin: 0; background: var(--bg); color: var(--text); }
         
-        /* شاشة تسجيل الدخول */
         #loginScreen {
             position: fixed; inset: 0; background: radial-gradient(circle at top, #1e293b, #0b1120);
             display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 9999;
@@ -39,7 +38,6 @@
         }
         .login-box input:focus { border-color: var(--primary); }
         
-        /* الهيكل الرئيسي للوحة الإدارة */
         .topbar {
             background: var(--card); border-bottom: 1px solid var(--border);
             padding: 14px 24px; display: flex; justify-content: space-between;
@@ -58,7 +56,6 @@
         .nav-btn:hover, .nav-btn.active { background: var(--primary); color: #fff; }
         .main-content { padding: 24px; max-width: 1200px; width: 100%; margin: 0 auto; }
         
-        /* البطاقات والحقول */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
         .stat-card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 16px; }
         .stat-val { font-size: 1.9rem; font-weight: 900; margin-top: 6px; }
@@ -97,7 +94,6 @@
 </head>
 <body>
 
-    <!-- شاشة القفل والحماية -->
     <div id="loginScreen">
         <div class="login-box">
             <div style="font-size:3rem;margin-bottom:8px;">🔐</div>
@@ -111,13 +107,12 @@
         </div>
     </div>
 
-    <!-- الشريط العلوي -->
     <header class="topbar">
         <div style="display:flex;align-items:center;gap:12px;">
             <div style="background:var(--primary);width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">👑</div>
             <div>
                 <div style="font-weight:900;font-size:1.15rem;">مركز إدارة مكتبة ياسين المولى</div>
-                <div style="font-size:0.78rem;color:var(--muted);">نظام التحكم الشامل بالمخزون، الزبائن، الطلبات، والتسويق</div>
+                <div style="font-size:0.78rem;color:var(--muted);">نظام التحكم الشامل بالمخزون والطلبات الحية (Live Firebase)</div>
             </div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -127,19 +122,20 @@
     </header>
 
     <div class="layout">
-        <!-- القائمة الجانبية -->
         <aside class="sidebar">
-            <button class="nav-btn active" onclick="switchTab('productsTab', this)">📦 المنتجات والمخزون</button>
-            <button class="nav-btn" onclick="switchTab('ordersTab', this)">🛒 سجل الطلبات والزبائن</button>
+            <button class="nav-btn active" onclick="switchTab('ordersTab', this)">🔔 الطلبات الحية والزبائن</button>
+            <button class="nav-btn" onclick="switchTab('productsTab', this)">📦 المنتجات والمخزون</button>
             <button class="nav-btn" onclick="switchTab('shippingTab', this)">🏷️ بوليصة الشحن والتوصيل</button>
             <button class="nav-btn" onclick="switchTab('marketingTab', this)">📸 التسويق والكوبونات</button>
             <button class="nav-btn" onclick="switchTab('backupTab', this)">💾 النسخ الاحتياطي والجرد</button>
         </aside>
 
-        <!-- المحتوى الرئيسي -->
         <main class="main-content">
-            <!-- شريط الإحصائيات -->
             <div class="stats-grid">
+                <div class="stat-card">
+                    <div style="color:var(--muted);font-size:0.85rem;">الطلبات الحية (Firebase)</div>
+                    <div class="stat-val" style="color:var(--info);" id="stOrders">0</div>
+                </div>
                 <div class="stat-card">
                     <div style="color:var(--muted);font-size:0.85rem;">إجمالي المنتجات</div>
                     <div class="stat-val" id="stTotal">0</div>
@@ -152,14 +148,23 @@
                     <div style="color:var(--muted);font-size:0.85rem;">نافذ الكمية</div>
                     <div class="stat-val" style="color:var(--danger);" id="stOut">0</div>
                 </div>
-                <div class="stat-card">
-                    <div style="color:var(--muted);font-size:0.85rem;">الطلبات المسجلة</div>
-                    <div class="stat-val" style="color:var(--info);" id="stOrders">0</div>
+            </div>
+
+            <!-- 1. تبويب الطلبات الحية والزبائن -->
+            <div id="ordersTab" class="tab-pane active">
+                <div class="panel">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+                        <h3 style="margin:0;color:var(--info);">🔔 الطلبات الواردة مباشرة من المتجر (تحديث تلقائي كل 5 ثوانٍ)</h3>
+                        <button class="btn btn-dark" onclick="fetchLiveFirebaseOrders()">🔄 تحديث الآن</button>
+                    </div>
+                    <div id="adminOrdersContainer">
+                        <div style="text-align:center;color:var(--muted);padding:24px;">جاري الاتصال بقاعدة البيانات الحية...</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 1. تبويب إدارة المنتجات -->
-            <div id="productsTab" class="tab-pane active">
+            <!-- 2. تبويب إدارة المنتجات -->
+            <div id="productsTab" class="tab-pane">
                 <div class="panel">
                     <h3 id="prodFormHeading" style="margin:0 0 16px;color:var(--primary);">➕ إضافة منتج / ملزمة جديدة</h3>
                     <input type="hidden" id="editProdIdx" value="-1">
@@ -182,7 +187,7 @@
                         <input type="text" id="pImgUrl" placeholder="رابط الصورة أو ارفعها من الزر المجاور">
                         <input type="file" id="pFileInput" accept="image/*" onchange="compressProductImg(event)">
                     </div>
-                    <textarea id="pDesc" rows="2" placeholder="وصف وتفاصيل المنتج (اسم الأستاذ، الصف، عدد الصفحات...)" style="margin-bottom:12px;"></textarea>
+                    <textarea id="pDesc" rows="2" placeholder="وصف وتفاصيل المنتج..." style="margin-bottom:12px;"></textarea>
                     <div style="display:flex;gap:10px;">
                         <button class="btn" onclick="saveProduct()">💾 حفظ المنتج</button>
                         <button class="btn btn-dark" id="cancelEditBtn" style="display:none;" onclick="resetProdForm()">إلغاء التعديل</button>
@@ -198,26 +203,6 @@
                 </div>
             </div>
 
-            <!-- 2. تبويب سجل الطلبات والزبائن -->
-            <div id="ordersTab" class="tab-pane">
-                <div class="panel">
-                    <h3 style="margin:0 0 16px;color:var(--info);">➕ تسجيل طلب جديد لزبون</h3>
-                    <div class="form-grid" style="margin-bottom:12px;">
-                        <input type="text" id="oName" placeholder="اسم الزبون الكامل *">
-                        <input type="text" id="oPhone" placeholder="رقم الهاتف (07xxxxxxxxx) *">
-                        <input type="text" id="oAddr" placeholder="المحافظة والمنطقة">
-                        <input type="number" id="oTotal" placeholder="المبلغ الإجمالي شامل التوصيل (د.ع)">
-                    </div>
-                    <textarea id="oItems" rows="2" placeholder="تفاصيل الملازم والمنتجات المطلوبة..." style="margin-bottom:12px;"></textarea>
-                    <button class="btn btn-info" onclick="saveOrder()">💾 حفظ الطلب في السجل</button>
-                </div>
-
-                <div class="panel">
-                    <h3 style="margin:0 0 16px;">🗂️ سجل الطلبات وبيانات الزبائن</h3>
-                    <div id="adminOrdersContainer"></div>
-                </div>
-            </div>
-
             <!-- 3. تبويب بوليصة الشحن -->
             <div id="shippingTab" class="tab-pane">
                 <div class="panel" style="max-width:540px;">
@@ -227,8 +212,8 @@
                         <input type="text" id="wPhone" placeholder="رقم هاتف المستلم">
                         <input type="text" id="wAddr" placeholder="المحافظة والمنطقة ونقطة دالة">
                         <input type="number" id="wAmount" placeholder="المبلغ المطلوب استلامه (د.ع)">
-                        <textarea id="wNotes" rows="2" placeholder="ملاحظات للمندوب (مثال: قابل للكسر / الاتصال قبل الوصول)"></textarea>
-                        <button class="btn" onclick="printWaybill()">🖨️ معاينة وطباعة وصل الشحن الآن</button>
+                        <textarea id="wNotes" rows="2" placeholder="ملاحظات للمندوب"></textarea>
+                        <button class="btn" onclick="printManualWaybill()">🖨️ معاينة وطباعة وصل الشحن الآن</button>
                     </div>
                 </div>
             </div>
@@ -237,9 +222,9 @@
             <div id="marketingTab" class="tab-pane">
                 <div class="form-grid">
                     <div class="panel">
-                        <h3 style="margin:0 0 14px;color:var(--primary);">📸 صانع بطاقة إعلان ستوري (Instagram / Telegram)</h3>
+                        <h3 style="margin:0 0 14px;color:var(--primary);">📸 صانع بطاقة إعلان ستوري</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
-                            <input type="text" id="sTitle" placeholder="اسم الملزمة أو العرض (مثال: ملزمة الكيمياء 2026)">
+                            <input type="text" id="sTitle" placeholder="اسم الملزمة أو العرض">
                             <input type="text" id="sSub" placeholder="اسم الأستاذ أو تفاصيل إضافية">
                             <input type="text" id="sPrice" placeholder="السعر (مثال: 12,000 د.ع)">
                             <button class="btn" onclick="generateStoryImage()">✨ تصميم وتحميل صورة الستوري</button>
@@ -247,11 +232,11 @@
                     </div>
 
                     <div class="panel">
-                        <h3 style="margin:0 0 14px;color:var(--success);">🎟️ مولّد رسائل العروض للواتساب والتيليغرام</h3>
+                        <h3 style="margin:0 0 14px;color:var(--success);">🎟️ مولّد رسائل العروض للتيليغرام</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
-                            <input type="text" id="msgOfferTitle" placeholder="عنوان العرض (مثال: وصول الدفعة الجديدة من الملازم)">
+                            <input type="text" id="msgOfferTitle" placeholder="عنوان العرض">
                             <textarea id="msgOfferBody" rows="3" placeholder="اكتب تفاصيل العرض هنا..."></textarea>
-                            <button class="btn btn-success" onclick="copyMarketingPost()">📋 نسخ منشور إعلاني جاهز للقنوات</button>
+                            <button class="btn btn-success" onclick="copyMarketingPost()">📋 نسخ منشور إعلاني جاهز</button>
                         </div>
                     </div>
                 </div>
@@ -261,7 +246,6 @@
             <div id="backupTab" class="tab-pane">
                 <div class="panel">
                     <h3 style="margin:0 0 12px;">💾 إدارة البيانات والجرد والنسخ الاحتياطي</h3>
-                    <p style="color:var(--muted);font-size:0.9rem;">يمكنك تصدير جميع منتجاتك وأسعارك كملف Excel لمتابعة الجرد، أو أخذ نسخة احتياطية كاملة واستعادتها في أي وقت.</p>
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
                         <button class="btn btn-success" onclick="exportExcelCsv()">📊 تصدير جرد المنتجات (Excel / CSV)</button>
                         <button class="btn btn-info" onclick="downloadJsonBackup()">📥 تحميل نسخة احتياطية (JSON)</button>
@@ -277,8 +261,9 @@
 
     <script>
         const ADMIN_SECRET = 'admin2026';
+        const DB_ORDERS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/orders';
+        let lastOrderCount = -1;
 
-        // التحقق من تسجيل الدخول
         function checkAdminLogin() {
             const val = document.getElementById('adminPassInput').value;
             if (val === ADMIN_SECRET) {
@@ -304,7 +289,6 @@
             btn.classList.add('active');
         }
 
-        // جلب المنتجات من LocalStorage أو من ملف data/products.json إذا كانت الذاكرة فارغة
         async function initAdminData() {
             let prods = getProducts();
             if (!prods.length) {
@@ -317,7 +301,88 @@
                 } catch (e) {}
             }
             renderProductsAdmin();
-            renderOrdersAdmin();
+            fetchLiveFirebaseOrders();
+            setInterval(fetchLiveFirebaseOrders, 5000);
+        }
+
+        function playDingSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (e) {}
+        }
+
+        function fetchLiveFirebaseOrders() {
+            fetch(DB_ORDERS_URL + '.json?t=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    const list = [];
+                    if (data && typeof data === 'object') {
+                        Object.keys(data).forEach(key => {
+                            if (data[key]) {
+                                data[key]._fbKey = key;
+                                list.push(data[key]);
+                            }
+                        });
+                    }
+                    list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+                    if (lastOrderCount !== -1 && list.length > lastOrderCount) {
+                        playDingSound();
+                    }
+                    lastOrderCount = list.length;
+                    document.getElementById('stOrders').textContent = list.length;
+
+                    const container = document.getElementById('adminOrdersContainer');
+                    container.innerHTML = list.length ? list.map(o => {
+                        const statusColor = o.status === 'تم التسليم' ? '#10b981' : (o.status === 'قيد التجهيز' ? '#f59e0b' : '#38bdf8');
+                        return `
+                            <div class="item-row" style="border-right:4px solid ${statusColor};">
+                                <div style="flex:1;min-width:240px;">
+                                    <div style="font-weight:800;font-size:1rem;">
+                                        👤 ${o.name || 'زبون'} <span style="color:#38bdf8;font-size:0.85rem;">(${o.phone || ''})</span>
+                                        <span class="badge" style="background:#334155;margin-right:6px;">#${o.id || ''}</span>
+                                        <span class="badge" style="background:${statusColor};color:#0f172a;">${o.status || 'جديد'}</span>
+                                    </div>
+                                    <div style="font-size:0.85rem;color:#cbd5e1;margin-top:4px;">📍 <b>العنوان:</b> ${o.addr || ''} | 📅 ${o.date || ''}</div>
+                                    <div style="font-size:0.86rem;color:#f8fafc;margin-top:4px;background:#0f172a;padding:6px 10px;border-radius:8px;">📦 <b>الطلب:</b> ${o.items || ''}</div>
+                                    ${o.notes ? `<div style="font-size:0.82rem;color:#fbbf24;margin-top:4px;">📝 ملاحظة: ${o.notes}</div>` : ''}
+                                    <div style="font-size:0.92rem;color:#10b981;font-weight:800;margin-top:6px;">💰 الإجمالي: ${Number(o.total || 0).toLocaleString()} د.ع</div>
+                                </div>
+                                <div style="display:flex;flex-direction:column;gap:6px;">
+                                    <button class="btn" style="padding:6px 12px;font-size:0.8rem;" onclick="openWaybillWindow('${(o.name||'').replace(/'/g,'')}','${(o.phone||'').replace(/'/g,'')}','${(o.addr||'').replace(/'/g,'')}',${o.total || 0},'${o.id || ''}','')">🖨️ طباعة وصل</button>
+                                    <button class="btn btn-info" style="padding:6px 12px;font-size:0.8rem;" onclick="updateOrderStatus('${o._fbKey}','قيد التجهيز')">⚙️ قيد التجهيز</button>
+                                    <button class="btn btn-success" style="padding:6px 12px;font-size:0.8rem;" onclick="updateOrderStatus('${o._fbKey}','تم التسليم')">✅ تم التسليم</button>
+                                    <button class="btn btn-danger" style="padding:6px 12px;font-size:0.8rem;" onclick="deleteLiveOrder('${o._fbKey}')">🗑️ حذف</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد طلبات واردة حتى الآن. بانتظار أول طلب من المتجر!</div>';
+                })
+                .catch(() => {});
+        }
+
+        function updateOrderStatus(fbKey, status) {
+            fetch(DB_ORDERS_URL + '/' + fbKey + '.json', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            }).then(fetchLiveFirebaseOrders);
+        }
+
+        function deleteLiveOrder(fbKey) {
+            if (!confirm('هل أنت متأكد من حذف هذا الطلب نهائياً؟')) return;
+            fetch(DB_ORDERS_URL + '/' + fbKey + '.json', { method: 'DELETE' }).then(fetchLiveFirebaseOrders);
         }
 
         function getProducts() {
@@ -332,18 +397,12 @@
             if (rerender) renderProductsAdmin();
         }
 
-        function updateStats() {
+        function renderProductsAdmin() {
             const prods = getProducts();
-            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
             document.getElementById('stTotal').textContent = prods.length;
             document.getElementById('stAvail').textContent = prods.filter(p => !p.outOfStock).length;
             document.getElementById('stOut').textContent = prods.filter(p => p.outOfStock).length;
-            document.getElementById('stOrders').textContent = orders.length;
-        }
 
-        function renderProductsAdmin() {
-            updateStats();
-            const prods = getProducts();
             const q = (document.getElementById('prodSearch').value || '').trim().toLowerCase();
             const container = document.getElementById('adminProductsContainer');
 
@@ -368,14 +427,14 @@
                         </div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap;">
                             <button class="btn ${isOut ? 'btn-danger' : 'btn-success'}" style="padding:7px 12px;font-size:0.8rem;" onclick="toggleStock(${idx})">
-                                ${isOut ? '❌ نافذ (اضغط للتوفير)' : '✅ متوفر (اضغط للنفاد)'}
+                                ${isOut ? '❌ نافذ' : '✅ متوفر'}
                             </button>
                             <button class="btn btn-info" style="padding:7px 12px;font-size:0.8rem;" onclick="editProduct(${idx})">✏️ تعديل</button>
                             <button class="btn btn-dark" style="padding:7px 12px;font-size:0.8rem;" onclick="deleteProduct(${idx})">🗑️ حذف</button>
                         </div>
                     </div>
                 `;
-            }).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد منتجات حالياً. أضف منتجك الأول من النموذج أعلاه!</div>';
+            }).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد منتجات حالياً.</div>';
         }
 
         function compressProductImg(e) {
@@ -425,7 +484,7 @@
 
             saveProducts(prods);
             resetProdForm();
-            alert('✅ تم حفظ المنتج بنجاح! لا تنسَ الضغط على زر "نسخ كود المنتجات المحدث" في الأعلى ولصقه في data/products.json على GitHub ليظهر لجميع الزبائن.');
+            alert('✅ تم حفظ المنتج بنجاح! اضغط على زر "نسخ كود المنتجات المحدث" في الأعلى لتحديث ملف data/products.json على GitHub.');
         }
 
         function editProduct(idx) {
@@ -468,95 +527,41 @@
         function copyProductsJson() {
             const json = JSON.stringify(getProducts(), null, 2);
             navigator.clipboard.writeText(json).then(() => {
-                alert('✅ تم نسخ كود جميع المنتجات!\nالآن افتح ملف data/products.json في GitHub، امسح محتواه القديم والصق هذا الكود ثم اضغط Commit changes.');
+                alert('✅ تم نسخ كود المنتجات! الصقه في ملف data/products.json على GitHub.');
             });
         }
 
-        // إدارة الطلبات والزبائن
-        function saveOrder() {
-            const name = document.getElementById('oName').value.trim();
-            const phone = document.getElementById('oPhone').value.trim();
-            if (!name || !phone) { alert('يرجى إدخال اسم الزبون ورقمه'); return; }
-            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
-            orders.unshift({
-                id: 'YM-' + Math.floor(1000 + Math.random() * 9000),
-                name, phone,
-                addr: document.getElementById('oAddr').value.trim(),
-                total: Number(document.getElementById('oTotal').value || 0),
-                items: document.getElementById('oItems').value.trim(),
-                date: new Date().toLocaleDateString('ar-IQ')
-            });
-            localStorage.setItem('ym_admin_orders', JSON.stringify(orders));
-            ['oName','oPhone','oAddr','oTotal','oItems'].forEach(id => document.getElementById(id).value = '');
-            renderOrdersAdmin();
+        function printManualWaybill() {
+            openWaybillWindow(
+                document.getElementById('wName').value.trim() || 'زبون مكتبة ياسين المولى',
+                document.getElementById('wPhone').value.trim() || '---',
+                document.getElementById('wAddr').value.trim() || '---',
+                Number(document.getElementById('wAmount').value || 0),
+                'YM-' + Math.floor(1000 + Math.random() * 9000),
+                document.getElementById('wNotes').value.trim()
+            );
         }
 
-        function renderOrdersAdmin() {
-            updateStats();
-            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
-            const container = document.getElementById('adminOrdersContainer');
-            container.innerHTML = orders.length ? orders.map((o, i) => `
-                <div class="item-row">
-                    <div>
-                        <div style="font-weight:800;">👤 ${o.name} <span style="color:var(--info);font-size:0.85rem;">(${o.phone})</span> <span class="badge" style="background:#334155;">${o.id}</span></div>
-                        <div style="font-size:0.84rem;color:#cbd5e1;margin-top:4px;">📍 ${o.addr || 'غير محدد'} | 📅 ${o.date}</div>
-                        <div style="font-size:0.84rem;color:#94a3b8;margin-top:2px;">📦 ${o.items || '---'}</div>
-                        <div style="font-size:0.88rem;color:#fbbf24;font-weight:800;margin-top:4px;">💰 الإجمالي: ${Number(o.total).toLocaleString()} د.ع</div>
-                    </div>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn" style="padding:7px 12px;font-size:0.8rem;" onclick="fillWaybillFromOrder(${i})">🖨️ وصل شحن</button>
-                        <button class="btn btn-danger" style="padding:7px 12px;font-size:0.8rem;" onclick="deleteOrder(${i})">حذف</button>
-                    </div>
-                </div>
-            `).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد طلبات مسجلة بعد.</div>';
-        }
-
-        function deleteOrder(i) {
-            const orders = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]');
-            orders.splice(i, 1);
-            localStorage.setItem('ym_admin_orders', JSON.stringify(orders));
-            renderOrdersAdmin();
-        }
-
-        function fillWaybillFromOrder(i) {
-            const o = JSON.parse(localStorage.getItem('ym_admin_orders') || '[]')[i];
-            if (!o) return;
-            document.getElementById('wName').value = o.name;
-            document.getElementById('wPhone').value = o.phone;
-            document.getElementById('wAddr').value = o.addr;
-            document.getElementById('wAmount').value = o.total;
-            printWaybill();
-        }
-
-        // طباعة وصل التوصيل الحراري
-        function printWaybill() {
-            const name = document.getElementById('wName').value.trim() || 'زبون مكتبة ياسين المولى';
-            const phone = document.getElementById('wPhone').value.trim() || '---';
-            const addr = document.getElementById('wAddr').value.trim() || '---';
-            const amount = Number(document.getElementById('wAmount').value || 0).toLocaleString();
-            const notes = document.getElementById('wNotes').value.trim();
-            const code = 'YM-' + Math.floor(1000 + Math.random() * 9000);
-
+        function openWaybillWindow(name, phone, addr, amount, code, notes) {
             const w = window.open('', '_blank', 'width=420,height=550');
-            w.document.write(`
-                <html dir="rtl"><head><title>وصل شحن ${code}</title></head>
-                <body style="font-family:Tahoma,sans-serif;padding:20px;border:3px solid #000;margin:10px;">
-                    <h2 style="text-align:center;margin:0 0 6px;">مكتبة ياسين المولى</h2>
-                    <div style="text-align:center;font-size:13px;border-bottom:2px dashed #000;padding-bottom:8px;">بوليصة توصيل رسمية | رقم الشحنة: <b>${code}</b></div>
-                    <p style="font-size:15px;"><b>اسم المستلم:</b> ${name}</p>
-                    <p style="font-size:15px;"><b>رقم الهاتف:</b> ${phone}</p>
-                    <p style="font-size:15px;"><b>العنوان الكامل:</b> ${addr}</p>
-                    ${notes ? `<p style="font-size:13px;"><b>ملاحظات:</b> ${notes}</p>` : ''}
-                    <div style="background:#000;color:#fff;padding:12px;text-align:center;font-size:18px;font-weight:bold;margin-top:14px;">
-                        المبلغ المطلوب عند الاستلام: ${amount} د.ع
-                    </div>
-                    <script>window.print();<\/script>
-                </body></html>
-            `);
+            const htmlParts = [
+                '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>وصل شحن ' + code + '</title></head>',
+                '<body style="font-family:Tahoma,sans-serif;padding:20px;border:3px solid #000;margin:10px;">',
+                '<h2 style="text-align:center;margin:0 0 6px;">مكتبة ياسين المولى</h2>',
+                '<div style="text-align:center;font-size:13px;border-bottom:2px dashed #000;padding-bottom:8px;">بوليصة توصيل رسمية | رقم: <b>#' + code + '</b></div>',
+                '<p style="font-size:15px;"><b>اسم المستلم:</b> ' + name + '</p>',
+                '<p style="font-size:15px;"><b>رقم الهاتف:</b> ' + phone + '</p>',
+                '<p style="font-size:15px;"><b>العنوان الكامل:</b> ' + addr + '</p>',
+                notes ? '<p style="font-size:13px;"><b>ملاحظات:</b> ' + notes + '</p>' : '',
+                '<div style="background:#000;color:#fff;padding:12px;text-align:center;font-size:18px;font-weight:bold;margin-top:14px;">المبلغ المطلوب عند الاستلام: ' + Number(amount).toLocaleString() + ' د.ع</div>',
+                '</body></html>'
+            ];
+            w.document.write(htmlParts.join(''));
             w.document.close();
+            w.focus();
+            setTimeout(() => w.print(), 250);
         }
 
-        // صانع ستوري الإعلانات
         function generateStoryImage() {
             const title = document.getElementById('sTitle').value.trim() || 'أحدث الملازم الدراسية';
             const sub = document.getElementById('sSub').value.trim() || 'متوفرة الآن بكمية محدودة';
@@ -600,7 +605,7 @@
             const t = document.getElementById('msgOfferTitle').value.trim() || 'جديد مكتبة ياسين المولى 📚';
             const b = document.getElementById('msgOfferBody').value.trim();
             const post = `🔥 ${t}\n\n${b}\n\n🛒 اطلبها الآن مباشرة من متجرنا الإلكتروني:\nhttps://mrgrazi94-alt.github.io/yassin-almawla-library/\n\n🚚 توصيل سريع لجميع محافظات العراق!`;
-            navigator.clipboard.writeText(post).then(() => alert('✅ تم نسخ المنشور الإعلاني جاهزاً للنشر على تيليغرام وإنستغرام!'));
+            navigator.clipboard.writeText(post).then(() => alert('✅ تم نسخ المنشور الإعلاني بنجاح!'));
         }
 
         function exportExcelCsv() {
@@ -617,7 +622,7 @@
         }
 
         function downloadJsonBackup() {
-            const data = { products: getProducts(), orders: JSON.parse(localStorage.getItem('ym_admin_orders') || '[]') };
+            const data = { products: getProducts() };
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
             a.download = 'backup-yassin-library.json';
@@ -632,8 +637,6 @@
                 try {
                     const data = JSON.parse(ev.target.result);
                     if (Array.isArray(data.products)) saveProducts(data.products);
-                    if (Array.isArray(data.orders)) localStorage.setItem('ym_admin_orders', JSON.stringify(data.orders));
-                    renderOrdersAdmin();
                     alert('✅ تم استعادة النسخة الاحتياطية بنجاح!');
                 } catch (err) { alert('❌ ملف النسخة الاحتياطية غير صالح'); }
             };

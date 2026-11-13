@@ -843,5 +843,189 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', syncBarNow);
 })();
 </script>
+<script id="yassinFirebaseOrderSystem">
+(function() {
+    var DB_URL = 'https://yassin-library-default-rtdb.firebaseio.com/orders.json';
+
+    // 1. حقن نافذة إتمام الطلب المباشر الاحترافية
+    var modalHtml = `
+    <div id="ymDirectCheckoutModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.82);backdrop-filter:blur(6px);z-index:100000;align-items:center;justify-content:center;padding:16px;direction:rtl;font-family:inherit;">
+        <div style="background:#fff;color:#0f172a;width:100%;max-width:460px;border-radius:24px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,0.4);position:relative;animation:popIn 0.25s ease;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:12px;margin-bottom:16px;">
+                <h3 style="margin:0;font-size:1.2rem;color:#0f172a;">🚀 إتمام الطلب المباشر</h3>
+                <button type="button" onclick="document.getElementById('ymDirectCheckoutModal').style.display='none'" style="background:#f1f5f9;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-weight:bold;">✖</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:4px;">الاسم الثلاثي للزبون *</label>
+                    <input type="text" id="dcCustName" placeholder="مثال: علي حسين محمد" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;">
+                </div>
+                <div>
+                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:4px;">رقم الهاتف (واتساب / اتصال) *</label>
+                    <input type="tel" id="dcCustPhone" placeholder="077xxxxxxxx" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;text-align:left;" dir="ltr">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:8px;">
+                    <div>
+                        <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:4px;">المحافظة *</label>
+                        <select id="dcCustGov" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;">
+                            <option value="بغداد">بغداد (4,000 د.ع)</option>
+                            <option value="البصرة">البصرة (5,000 د.ع)</option>
+                            <option value="نينوى">نينوى (5,000 د.ع)</option>
+                            <option value="النجف">النجف (5,000 د.ع)</option>
+                            <option value="كربلاء">كربلاء (5,000 د.ع)</option>
+                            <option value="بابل">بابل (5,000 د.ع)</option>
+                            <option value="الأنبار">الأنبار (5,000 د.ع)</option>
+                            <option value="ديالى">ديالى (5,000 د.ع)</option>
+                            <option value="كركوك">كركوك (5,000 د.ع)</option>
+                            <option value="صلاح الدين">صلاح الدين (5,000 د.ع)</option>
+                            <option value="ذي قار">ذي قار (5,000 د.ع)</option>
+                            <option value="واسط">واسط (5,000 د.ع)</option>
+                            <option value="القادسية">القادسية (5,000 د.ع)</option>
+                            <option value="ميسان">ميسان (5,000 د.ع)</option>
+                            <option value="المثنى">المثنى (5,000 د.ع)</option>
+                            <option value="أربيل">أربيل (5,000 د.ع)</option>
+                            <option value="السليمانية">السليمانية (5,000 د.ع)</option>
+                            <option value="دهوك">دهوك (5,000 د.ع)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:4px;">المنطقة وأقرب نقطة دالة *</label>
+                        <input type="text" id="dcCustAddr" placeholder="المنطقة / الشارع / نقطة دالة" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:4px;">ملاحظات إضافية (اختياري)</label>
+                    <input type="text" id="dcCustNotes" placeholder="مثال: تسليك سبايرول أو وقت التوصيل المفضل" style="width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;">
+                </div>
+                <div id="dcSummaryBox" style="background:#f8fafc;padding:12px;border-radius:12px;border:1px dashed #f25011;font-size:0.88rem;line-height:1.6;"></div>
+                <button type="button" id="dcSubmitOrderBtn" style="background:linear-gradient(135deg,#f25011,#c2410c);color:#fff;border:none;padding:14px;border-radius:14px;font-weight:800;font-size:1.05rem;cursor:pointer;font-family:inherit;box-shadow:0 10px 25px rgba(242,80,17,0.3);">
+                    ✅ تأكيد وإرسال الطلب للمكتبة الآن
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    function extractCurrentCart() {
+        var items = [];
+        for (var k = 0; k < localStorage.length; k++) {
+            var key = localStorage.key(k);
+            if (!key || key.indexOf('product') !== -1 || key.indexOf('admin') !== -1) continue;
+            try {
+                var arr = JSON.parse(localStorage.getItem(key));
+                if (Array.isArray(arr) && arr.length > 0 && arr[0] && (arr[0].name || arr[0].price)) {
+                    items = arr;
+                    break;
+                }
+            } catch(e) {}
+        }
+        return items;
+    }
+
+    function openDirectCheckout() {
+        var items = extractCurrentCart();
+        var subTotal = 0;
+        var summaryLines = items.map(function(it) {
+            var q = Number(it.qty || it.quantity || 1);
+            var p = Number(String(it.price || 0).replace(/\D/g, ''));
+            subTotal += (p * q);
+            return '• ' + (it.name || 'منتج') + ' (×' + q + ') — ' + (p * q).toLocaleString() + ' د.ع';
+        });
+
+        var gov = document.getElementById('dcCustGov').value;
+        var deliv = subTotal >= 50000 ? 0 : (gov === 'بغداد' ? 4000 : 5000);
+        var grandTotal = subTotal + deliv;
+
+        document.getElementById('dcSummaryBox').innerHTML =
+            '<b>المشتريات:</b><br>' + (summaryLines.length ? summaryLines.join('<br>') : 'سلة المشتريات الحالية') +
+            '<hr style="border-color:#e2e8f0;margin:8px 0;">' +
+            '🚚 <b>التوصيل:</b> ' + (deliv === 0 ? 'مجاني 🎉' : deliv.toLocaleString() + ' د.ع') + '<br>' +
+            '💰 <b style="color:#f25011;font-size:1rem;">الإجمالي النهائي: ' + grandTotal.toLocaleString() + ' د.ع</b>';
+
+        document.getElementById('ymDirectCheckoutModal').style.display = 'flex';
+    }
+
+    document.getElementById('dcCustGov').onchange = openDirectCheckout;
+
+    // اعتراض أي زر إتمام طلب عبر واتساب وتحويله للنظام المباشر
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('button, a');
+        if (!btn) return;
+        var txt = (btn.textContent || '').trim();
+        if (txt.indexOf('واتساب') !== -1 && (txt.indexOf('إتمام') !== -1 || txt.indexOf('ارسل') !== -1 || txt.indexOf('اطلب') !== -1 || btn.closest('aside, #cartModal, .cart-modal'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            openDirectCheckout();
+        }
+    }, true);
+
+    // إرسال الطلب إلى قاعدة بيانات Firebase الحية
+    document.getElementById('dcSubmitOrderBtn').onclick = function() {
+        var name = document.getElementById('dcCustName').value.trim();
+        var phone = document.getElementById('dcCustPhone').value.trim();
+        var gov = document.getElementById('dcCustGov').value;
+        var addr = document.getElementById('dcCustAddr').value.trim();
+        var notes = document.getElementById('dcCustNotes').value.trim();
+
+        if (!name || !phone || !addr) {
+            alert('يرجى ملء الاسم ورقم الهاتف والعنوان الكامل');
+            return;
+        }
+
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '⏳ جاري إرسال طلبك للمكتبة...';
+
+        var items = extractCurrentCart();
+        var subTotal = 0;
+        var itemsText = items.map(function(it) {
+            var q = Number(it.qty || it.quantity || 1);
+            var p = Number(String(it.price || 0).replace(/\D/g, ''));
+            subTotal += (p * q);
+            return (it.name || 'منتج') + ' (×' + q + ')';
+        }).join(' + ');
+
+        var deliv = subTotal >= 50000 ? 0 : (gov === 'بغداد' ? 4000 : 5000);
+        var orderCode = 'YM-' + Math.floor(1000 + Math.random() * 9000);
+
+        var orderPayload = {
+            id: orderCode,
+            name: name,
+            phone: phone,
+            addr: gov + ' - ' + addr,
+            items: itemsText || 'طلب من المتجر',
+            total: subTotal + deliv,
+            notes: notes,
+            status: 'جديد',
+            date: new Date().toLocaleString('ar-IQ'),
+            timestamp: Date.now()
+        };
+
+        fetch(DB_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderPayload)
+        })
+        .then(function(res) {
+            if (!res.ok) throw new Error('Network error');
+            localStorage.setItem('ym_last_order', '#' + orderCode);
+            // تفريغ السلة بعد نجاح الطلب
+            for (var k = 0; k < localStorage.length; k++) {
+                var key = localStorage.key(k);
+                if (key && key.toLowerCase().indexOf('cart') !== -1) localStorage.removeItem(key);
+            }
+            document.getElementById('ymDirectCheckoutModal').style.display = 'none';
+            alert('🎉 تم استلام طلبك بنجاح في نظام مكتبة ياسين المولى!\n\nرقم تتبع طلبك: #' + orderCode + '\nسيتواصل معك فريق التجهيز قريباً.');
+            location.reload();
+        })
+        .catch(function() {
+            alert('حدث خطأ في الاتصال، يرجى المحاولة مرة أخرى.');
+            btn.disabled = false;
+            btn.textContent = '✅ تأكيد وإرسال الطلب للمكتبة الآن';
+        });
+    };
+})();
+</script>
 </body>
 </html>
