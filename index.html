@@ -954,9 +954,118 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('DOMContentLoaded', bindBottomBar);
 })();
 </script>
+<!-- ============================================================ -->
+<!-- ✨ De-AI Brand Polish & Luxury UI System                     -->
+<!-- ============================================================ -->
+<style id="ym-brand-luxury-polish">
+    /* 1. توحيد ألوان بطاقات الخدمات التفاعلية وكسر طابع ألوان قوس قزح */
+    section div[style*="background"] button,
+    [class*="service"] , [class*="feature-card"],
+    button[style*="linear-gradient"]:not(#ym-direct-order-submit):not([id*="Cart"]) {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
+        transition: all 0.25s ease !important;
+    }
+    section div[style*="background"] button:hover,
+    [class*="service"]:hover, [class*="feature-card"]:hover {
+        border-color: #f25011 !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 24px rgba(242, 80, 17, 0.08) !important;
+    }
+    section div[style*="background"] button *,
+    [class*="service"] *, [class*="feature-card"] * {
+        color: #0f172a !important;
+    }
+
+    /* 2. تهذيب بطاقات المنتجات لتكون رصينة وأنيقة */
+    .product-card, article {
+        background: #ffffff !important;
+        border: 1px solid #f1f5f9 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+    }
+    .product-card:hover, article:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07) !important;
+    }
+
+    /* 3. إخفاء الإشعارات الوهمية المزعجة التي تكشف طابع الـ AI */
+    .social-proof-toast {
+        display: none !important;
+    }
+
+    /* 4. تصميم نافذة الإشعارات المخصصة بدلاً من alert المتصفح التقليدي */
+    #ym-custom-modal-overlay {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(4px); z-index: 999999; display: none;
+        align-items: center; justify-content: center; padding: 20px; direction: rtl;
+    }
+    #ym-custom-modal-box {
+        background: #ffffff; color: #0f172a; width: 100%; max-width: 400px;
+        border-radius: 18px; padding: 28px 24px; text-align: center;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0;
+        font-family: 'Cairo', sans-serif;
+    }
+    #ym-custom-modal-box h4 {
+        margin: 0 0 10px; font-size: 1.15rem; font-weight: 800; color: #0f172a;
+    }
+    #ym-custom-modal-box p {
+        margin: 0 0 20px; font-size: 0.92rem; color: #475569; line-height: 1.7; white-space: pre-line;
+    }
+    #ym-custom-modal-btn {
+        background: #0f172a; color: #ffffff; border: none; padding: 11px 28px;
+        border-radius: 10px; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+        width: 100%; font-family: inherit; transition: background 0.2s;
+    }
+    #ym-custom-modal-btn:hover { background: #f25011; }
+</style>
+
+<div id="ym-custom-modal-overlay">
+    <div id="ym-custom-modal-box">
+        <div style="width:46px;height:46px;background:#fff7ed;color:#f25011;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-weight:900;font-size:1.3rem;border:1px solid #ffedd5;">✓</div>
+        <h4 id="ym-modal-title">إشعار النظام</h4>
+        <p id="ym-modal-msg"></p>
+        <button id="ym-custom-modal-btn" onclick="document.getElementById('ym-custom-modal-overlay').style.display='none'">حسناً، متابعة</button>
+    </div>
+</div>
+
+<script id="ym-brand-deai-script">
+(function() {
+    // 1. استبدال alert المتصفح التقليدي بنافذة البراند الأنيقة
+    var origAlert = window.alert;
+    window.alert = function(msg) {
+        var overlay = document.getElementById('ym-custom-modal-overlay');
+        var msgEl = document.getElementById('ym-modal-msg');
+        var titleEl = document.getElementById('ym-modal-title');
+        if (overlay && msgEl) {
+            var cleanText = String(msg || '').replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+            titleEl.textContent = cleanText.indexOf('تم استلام') !== -1 || cleanText.indexOf('بنجاح') !== -1 ? 'تأكيد العملية' : 'تنبيه';
+            msgEl.textContent = cleanText;
+            overlay.style.display = 'flex';
+        } else {
+            origAlert(msg);
+        }
+    };
+
+    // 2. تنظيف الإيموجي العشوائي من العناوين والأزرار لإعطاء طابع تجاري رصين
+    function stripCartoonEmojis() {
+        var emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+        var targets = document.querySelectorAll('h1, h2, h3, h4, button, nav a, span');
+        targets.forEach(function(el) {
+            if (el.children.length === 0 && el.textContent) {
+                var cleaned = el.textContent.replace(emojiRegex, '').replace(/\s{2,}/g, ' ').trim();
+                if (cleaned && cleaned !== el.textContent.trim()) {
+                    el.textContent = cleaned;
+                }
+            }
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', stripCartoonEmojis);
+    setTimeout(stripCartoonEmojis, 600);
+})();
+</script>
 </body>
 </html>
-
-
-
-
