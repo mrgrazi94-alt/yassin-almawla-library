@@ -1,13 +1,7 @@
-﻿self.addEventListener('install', function(event) {
-    self.skipWaiting();
-});
-
-self.addEventListener('activate', function(event) {
-    event.waitUntil(clients.claim());
-});
-
-self.addEventListener('fetch', function(event) {
-    event.respondWith(fetch(event.request).catch(function() {
-        return caches.match(event.request);
-    }));
+﻿self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => {
+    e.waitUntil(
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
+        .then(() => self.registration.unregister())
+    );
 });

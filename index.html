@@ -60,6 +60,31 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="مكتبة ياسين المولى">
     <link rel="apple-touch-icon" href="assets/images/logo.jpg">
+<style id="ym-brand-final-polish">
+    /* توحيد بطاقات الخدمات التفاعلية بلون أبيض رصين وحدود أنيقة */
+    .tools-grid > div, .services-grid > div, .quick-tools > div,
+    section div[onclick], main div[onclick] {
+        background: #ffffff !important;
+        background-image: none !important;
+        color: #0f172a !important;
+        border: 1.5px solid #e2e8f0 !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+        transition: all 0.25s ease !important;
+    }
+    section div[onclick]:hover, main div[onclick]:hover {
+        border-color: #f25011 !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 24px rgba(242, 80, 17, 0.12) !important;
+    }
+    section div[onclick] *, main div[onclick] * {
+        color: #0f172a !important;
+    }
+    /* جعل الشريط العلوي كحلي فاخر */
+    body > div:first-of-type {
+        background: #0f172a !important;
+        background-image: none !important;
+    }
+</style>
 </head>
 <body>
 
@@ -1065,4 +1090,5 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
