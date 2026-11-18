@@ -1,97 +1,190 @@
 ﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
-<script id="ymStoreLiveProducts">
-(function() {
-    var DB_PRODS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/products.json';
-    var origFetch = window.fetch;
-
-    window.fetch = function(resource, init) {
-        if (typeof resource === 'string' && resource.indexOf('products.json') !== -1 && resource.indexOf('firebaseio.com') === -1) {
-            return origFetch(DB_PRODS_URL + '?t=' + Date.now())
-                .then(function(res) { return res.json(); })
-                .then(function(cloudData) {
-                    if (Array.isArray(cloudData) && cloudData.length > 0) {
-                        var oldStr = localStorage.getItem('yassin_products');
-                        var newStr = JSON.stringify(cloudData);
-                        localStorage.setItem('yassin_products', newStr);
-                        localStorage.setItem('products', newStr);
-                        // إعادة تحميل الواجهة مرة واحدة إذا تغيرت المنتجات عن الكاش القديم
-                        if (oldStr && oldStr !== newStr && !sessionStorage.getItem('ym_synced_once')) {
-                            sessionStorage.setItem('ym_synced_once', '1');
-                            setTimeout(function() { location.reload(); }, 150);
-                        }
-                        return new Response(newStr, {
-                            status: 200,
-                            headers: { 'Content-Type': 'application/json' }
-                        });
-                    }
-                    return origFetch(resource, init);
-                })
-                .catch(function() {
-                    return origFetch(resource, init);
-                });
-        }
-        return origFetch.apply(this, arguments);
-    };
-})();
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="description" content="مكتبة ياسين المولى - المنصة الأولى للقرطاسية، الملازم الدراسية، الحقائب، ومستلزمات الرسم في العراق. توصيل سريع لكافة المحافظات والدفع عند الاستلام.">
     <link rel="icon" href="assets/images/logo.jpg">
     <title>مكتبة ياسين المولى | المتجر الرسمي للقرطاسية والملازم</title>
+
+    <!-- الخطوط والأيقونات والتنسيقات الأساسية -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <!-- Open Graph / Social Media Preview -->
+    <link rel="stylesheet" href="assets/css/style.css?v=20">
+
+    <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="مكتبة ياسين المولى | المتجر الإلكتروني الرسمي">
-    <meta property="og:description" content="أحدث الملازم الدراسية، القرطاسية، وحاسبة الاستنساخ الفورية مع توصيل سريع لجميع محافظات العراق.">
+    <meta property="og:description" content="أحدث الملازم الدراسية، القرطاسية، ومستلزمات الرسم مع توصيل سريع لجميع محافظات العراق.">
     <meta property="og:image" content="https://mrgrazi94-alt.github.io/yassin-almawla-library/assets/images/logo.jpg">
     <meta property="og:url" content="https://mrgrazi94-alt.github.io/yassin-almawla-library/">
     <meta name="twitter:card" content="summary_large_image">
-    <!-- PWA App Configuration -->
+
+    <!-- PWA Configuration -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#f25011">
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="مكتبة ياسين المولى">
     <link rel="apple-touch-icon" href="assets/images/logo.jpg">
-<style id="ym-brand-final-polish">
-    /* توحيد بطاقات الخدمات التفاعلية بلون أبيض رصين وحدود أنيقة */
-    .tools-grid > div, .services-grid > div, .quick-tools > div,
-    section div[onclick], main div[onclick] {
-        background: #ffffff !important;
-        background-image: none !important;
-        color: #0f172a !important;
-        border: 1.5px solid #e2e8f0 !important;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
-        transition: all 0.25s ease !important;
-    }
-    section div[onclick]:hover, main div[onclick]:hover {
-        border-color: #f25011 !important;
-        transform: translateY(-3px) !important;
-        box-shadow: 0 12px 24px rgba(242, 80, 17, 0.12) !important;
-    }
-    section div[onclick] *, main div[onclick] * {
-        color: #0f172a !important;
-    }
-    /* جعل الشريط العلوي كحلي فاخر */
-    body > div:first-of-type {
-        background: #0f172a !important;
-        background-image: none !important;
-    }
-</style>
+
+    <!-- الهوية البصرية الفاخرة والموحدة للبراند -->
+    <style>
+        :root {
+            --brand-navy: #0f172a;
+            --brand-orange: #f25011;
+            --brand-surface: #ffffff;
+            --brand-bg: #f8fafc;
+            --brand-border: #e2e8f0;
+        }
+        body {
+            background-color: var(--brand-bg);
+            color: var(--brand-navy);
+            font-family: 'Cairo', sans-serif;
+        }
+        /* الشريط الإعلاني العلوي بلون كحلي رصين */
+        .announcement-bar {
+            background: var(--brand-navy) !important;
+            color: #f8fafc !important;
+            border-bottom: 1px solid #1e293b;
+            font-size: 0.88rem;
+        }
+        .promo-pill code {
+            background: rgba(242, 80, 17, 0.18);
+            color: #ff8a5b;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+        /* زر حساب الزبون المدمج بأناقة */
+        .customer-pill-btn {
+            background: #f1f5f9;
+            color: var(--brand-navy);
+            border: 1px solid var(--brand-border);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+        }
+        .customer-pill-btn:hover {
+            border-color: var(--brand-orange);
+            color: var(--brand-orange);
+        }
+        /* توحيد تصميم بطاقات المنتجات */
+        .product-card {
+            background: var(--brand-surface);
+            border: 1px solid var(--brand-border);
+            border-radius: 14px;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        .product-card:hover {
+            border-color: #cbd5e1;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        }
+        /* زر إتمام الطلب المباشر داخل السلة */
+        .direct-order-btn {
+            width: 100%;
+            background: var(--brand-navy);
+            color: #ffffff;
+            border: none;
+            padding: 13px 18px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.96rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s ease;
+        }
+        .direct-order-btn:hover {
+            background: var(--brand-orange);
+        }
+        .direct-order-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+        /* نافذة الإشعارات المخصصة للبراند */
+        .ym-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .ym-dialog-card {
+            background: #ffffff;
+            color: var(--brand-navy);
+            width: 100%;
+            max-width: 410px;
+            border-radius: 18px;
+            padding: 28px 24px;
+            text-align: center;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.22);
+            border: 1px solid var(--brand-border);
+        }
+        .ym-dialog-icon {
+            width: 48px;
+            height: 48px;
+            background: #fff7ed;
+            color: var(--brand-orange);
+            border: 1px solid #ffedd5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            font-size: 1.25rem;
+        }
+        .ym-dialog-card h4 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+        .ym-dialog-card p {
+            margin: 0 0 20px;
+            font-size: 0.92rem;
+            color: #475569;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+        .ym-dialog-btn {
+            width: 100%;
+            background: var(--brand-navy);
+            color: #ffffff;
+            border: none;
+            padding: 11px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+        .ym-dialog-btn:hover {
+            background: var(--brand-orange);
+        }
+    </style>
 </head>
 <body>
 
-    <!-- شريط الإعلانات الذكي -->
+    <!-- شريط التوصيل والعروض -->
     <div class="announcement-bar">
         <div class="container announcement-flex">
-            <span>🚀 توصيل سريع لباب البيت في بغداد (4,000 د.ع) والمحافظات (5,000 د.ع) — <strong>مجاناً للطلبات فوق 50,000 د.ع!</strong></span>
+            <span>توصيل سريع لباب البيت في بغداد (4,000 د.ع) والمحافظات (5,000 د.ع) — <strong>مجاناً للطلبات فوق 50,000 د.ع</strong></span>
             <span class="promo-pill">كود الخصم: <code>YASSIN10</code></span>
         </div>
     </div>
@@ -112,7 +205,7 @@
         </div>
     </div>
 
-    <!-- الهيدر الرئيسي (بنظام المتاجر العالمية) -->
+    <!-- الهيدر الرئيسي -->
     <header class="main-header">
         <div class="container header-grid">
             <!-- الشعار -->
@@ -127,7 +220,7 @@
                 </a>
             </div>
 
-            <!-- شريط البحث المركزي الذكي -->
+            <!-- شريط البحث المركزي -->
             <div class="central-search">
                 <div class="search-box">
                     <i class="fas fa-search search-icon"></i>
@@ -139,7 +232,11 @@
 
             <!-- أزرار التحكم السريعة -->
             <div class="header-controls">
-                <button class="control-btn" id="themeToggleBtn" title="تبديل الوضع الليلي/النهاري">
+                <button type="button" class="customer-pill-btn" id="openCustomerProfileBtn">
+                    <i class="fas fa-user" style="color: var(--brand-orange);"></i>
+                    <span id="headerCustomerName">حسابي</span>
+                </button>
+                <button class="control-btn" id="themeToggleBtn" title="تبديل المظهر">
                     <i class="fas fa-moon"></i>
                 </button>
                 <button class="control-btn" id="ordersHistoryBtn" title="طلباتي السابقة">
@@ -180,16 +277,16 @@
         </nav>
     </header>
 
-    <!-- الواجهة الرئيسية السينمائية (Split Hero Section) -->
+    <!-- الواجهة الرئيسية -->
     <section class="hero-showcase">
         <div class="container hero-layout">
             <div class="hero-info">
-                <div class="hero-pill"><i class="fas fa-sparkles"></i> تشكيلة العام الدراسي الجديد 2026</div>
+                <div class="hero-pill">تشكيلة العام الدراسي 2026</div>
                 <h1>كل ما يحتاجه الطالب والفنان في <span class="highlight-text">مكان واحد</span></h1>
                 <p>نوفر لك أحدث الملازم الوزارية، القرطاسية المستوردة، الحقائب الطبية، وأدوات الرسم الاحترافية بأعلى جودة وأسرع توصيل لجميع محافظات العراق.</p>
                 <div class="hero-actions">
-                    <button class="btn-primary-lg" id="shopNowBtn">ابدأ التسوق الآن <i class="fas fa-arrow-left"></i></button>
-                    <button class="btn-outline-lg" onclick="filterByCategory('ملازم')">تصفح الملازم</button>
+                    <button class="btn-primary-lg" id="shopNowBtn">تصفح المنتجات <i class="fas fa-arrow-left"></i></button>
+                    <button class="btn-outline-lg" onclick="filterByCategory('ملازم')">الملازم الدراسية</button>
                 </div>
                 <div class="hero-stats">
                     <div class="stat-box"><strong>+1,500</strong><span>منتج متنوع</span></div>
@@ -247,7 +344,7 @@
         </div>
     </main>
 
-    <!-- الفوتر الاحترافي -->
+    <!-- الفوتر -->
     <footer class="pro-footer">
         <div class="container footer-grid">
             <div class="footer-col">
@@ -284,16 +381,16 @@
 
         <div class="container footer-bottom">
             <p>جميع الحقوق محفوظة &copy; 2026 مكتبة ياسين المولى.</p>
-            <button id="secretAdminTrigger" class="admin-stealth-btn" title="بوابة الإدارة"><i class="fas fa-lock"></i></button>
+            <a href="admin.html" class="admin-stealth-btn" title="بوابة الإدارة"><i class="fas fa-lock"></i></a>
         </div>
     </footer>
 
-    <!-- زر الواتساب العائم -->
-    <a href="https://wa.me/9647752742334" class="whatsapp-float" target="_blank" rel="noopener noreferrer" title="تحدث معنا على واتساب">
+    <!-- زر التواصل السريع -->
+    <a href="https://wa.me/9647752742334" class="whatsapp-float" target="_blank" rel="noopener noreferrer" title="تحدث معنا للاستفسار">
         <i class="fab fa-whatsapp"></i>
     </a>
 
-    <!-- سلة المشتريات الجانبية المتطورة -->
+    <!-- سلة المشتريات الجانبية -->
     <div class="drawer-backdrop" id="cartOverlay"></div>
     <aside class="cart-sidebar" id="cartDrawer">
         <div class="cart-sidebar-header">
@@ -301,7 +398,6 @@
             <button class="close-drawer-btn" id="closeCartBtn"><i class="fas fa-times"></i></button>
         </div>
 
-        <!-- شريط التقدم للحصول على توصيل مجاني -->
         <div class="free-shipping-box" id="freeShippingBox">
             <p id="freeShippingText">أضف منتجات بقيمة <strong>50,000 د.ع</strong> للحصول على توصيل مجاني!</p>
             <div class="progress-track">
@@ -313,7 +409,7 @@
 
         <div class="cart-sidebar-footer">
             <div class="coupon-bar">
-                <input type="text" id="couponInput" placeholder="أدخل كود الخصم (YASSIN10)">
+                <input type="text" id="couponInput" placeholder="كود الخصم (YASSIN10)">
                 <button type="button" id="applyCouponBtn">تطبيق</button>
             </div>
 
@@ -351,14 +447,14 @@
                     <option value="دهوك" data-fee="5000">دهوك — 5,000 د.ع</option>
                 </select>
                 <input type="text" id="custAddress" placeholder="العنوان بالتفصيل (المنطقة / أقرب نقطة دالة) *" required maxlength="120">
-                <button type="submit" class="confirm-whatsapp-btn">
-                    <i class="fab fa-whatsapp"></i> إرسال الطلب وتأكيد الفاتورة
+                <button type="submit" id="directSubmitOrderBtn" class="direct-order-btn">
+                    <i class="fas fa-check-circle"></i> تأكيد وإرسال الطلب
                 </button>
             </form>
         </div>
     </aside>
 
-    <!-- نافذة النظرة السريعة للمنتج مع اختيار النوع/اللون -->
+    <!-- نافذة النظرة السريعة للمنتج -->
     <div class="pro-modal-overlay" id="quickViewModal">
         <div class="pro-modal-box">
             <button class="modal-close-x" id="closeQuickView"><i class="fas fa-times"></i></button>
@@ -370,12 +466,12 @@
                     <span class="qv-cat" id="modalCategory">القسم</span>
                     <h2 id="modalTitle">اسم المنتج</h2>
                     <div class="qv-rating">
-                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                         <span>(منتج أصلي مضمون)</span>
                     </div>
                     <div class="qv-price" id="modalPrice">0 د.ع</div>
                     <p class="qv-desc" id="modalDesc">وصف المنتج</p>
-                    
+
                     <div class="qv-variants hidden" id="modalVariantsBox">
                         <label>اختر النوع / اللون:</label>
                         <div class="variant-pills" id="modalVariantPills"></div>
@@ -398,697 +494,250 @@
         </div>
     </div>
 
-    <!-- نافذة سجل طلبات الزبون -->
+    <!-- نافذة سجل الطلبات -->
     <div class="pro-modal-overlay" id="ordersModal">
         <div class="pro-modal-box" style="max-width: 560px;">
             <button class="modal-close-x" id="closeOrdersModal"><i class="fas fa-times"></i></button>
-            <h3 class="modal-heading"><i class="fas fa-receipt" style="color: var(--accent);"></i> سجل طلباتك السابقة</h3>
+            <h3 class="modal-heading"><i class="fas fa-receipt" style="color: var(--brand-orange);"></i> سجل طلباتك السابقة</h3>
             <div id="ordersHistoryContainer"></div>
         </div>
     </div>
 
-    <!-- لوحة تحكم الإدارة المتكاملة (Pro Admin Dashboard) -->
-    <div class="pro-modal-overlay" id="adminModal">
-        <div class="pro-modal-box" style="max-width: 680px;">
-            <button class="modal-close-x" id="closeAdminModal"><i class="fas fa-times"></i></button>
-            
-            <!-- شاشة الدخول -->
-            <div id="adminLoginSection">
-                <h3 class="modal-heading"><i class="fas fa-shield-alt"></i> بوابة إدارة مكتبة ياسين المولى</h3>
-                <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 15px;">أدخل كلمة المرور المشفرة للوصول إلى لوحة التحكم والمخزون.</p>
-                <input type="password" id="adminPasswordInput" class="pro-input" placeholder="كلمة المرور السرية">
-                <p id="adminErrorMsg" style="color: #ef4444; font-size: 13px; margin: 8px 0;"></p>
-                <button id="adminLoginSubmit" class="btn-primary-lg" style="width: 100%; justify-content: center; margin-top: 10px;">دخول آمن</button>
-            </div>
+    <!-- نافذة حساب الزبون الموحدة -->
+    <div class="pro-modal-overlay" id="customerModal">
+        <div class="pro-modal-box" style="max-width: 440px;">
+            <button class="modal-close-x" id="closeCustomerModal"><i class="fas fa-times"></i></button>
+            <h3 class="modal-heading"><i class="fas fa-user-check" style="color: var(--brand-orange);"></i> بيانات التوصيل المحفوظة</h3>
+            <form id="customerAuthForm" style="display:flex;flex-direction:column;gap:12px;">
+                <input type="text" id="custNameInput" placeholder="الاسم الكامل" required class="pro-input">
+                <input type="tel" id="custPhoneInput" placeholder="رقم الهاتف (07XXXXXXXXX)" required class="pro-input">
+                <select id="custGovInput" class="pro-input">
+                    <option value="بغداد">بغداد</option>
+                    <option value="البصرة">البصرة</option>
+                    <option value="نينوى">نينوى</option>
+                    <option value="أربيل">أربيل</option>
+                    <option value="النجف">النجف</option>
+                    <option value="كربلاء">كربلاء</option>
+                    <option value="بابل">بابل</option>
+                    <option value="الأنبار">الأنبار</option>
+                    <option value="ديالى">ديالى</option>
+                    <option value="ذي قار">ذي قار</option>
+                    <option value="كركوك">كركوك</option>
+                    <option value="صلاح الدين">صلاح الدين</option>
+                    <option value="واسط">واسط</option>
+                    <option value="ميسان">ميسان</option>
+                    <option value="القادسية">القادسية</option>
+                    <option value="المثنى">المثنى</option>
+                    <option value="السليمانية">السليمانية</option>
+                    <option value="دهوك">دهوك</option>
+                </select>
+                <input type="text" id="custAddressInput" placeholder="العنوان بالتفصيل (المنطقة / أقرب نقطة دالة)" required class="pro-input">
+                <button type="submit" class="direct-order-btn">حفظ البيانات لتسهيل الطلب</button>
+                <button type="button" id="logoutCustomerBtn" class="hidden" style="background:#ef4444;color:#fff;border:none;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;">مسح البيانات المحفوظة</button>
+            </form>
+        </div>
+    </div>
 
-            <!-- لوحة التحكم -->
-            <div id="adminDashboardSection" class="hidden">
-                <div class="admin-top-bar">
-                    <h3><i class="fas fa-sliders-h"></i> لوحة الإدارة والمخزون</h3>
-                    <button id="adminLogoutBtn" class="btn-danger-sm">تسجيل خروج</button>
-                </div>
-
-                <!-- إحصائيات سريعة -->
-                <div class="admin-stats-grid" id="adminStatsGrid"></div>
-
-                <!-- إضافة منتج جديد -->
-                <form id="addProductForm" class="admin-add-form">
-                    <h4>+ إضافة منتج جديد</h4>
-                    <div class="form-row-2">
-                        <input type="text" id="newProdName" class="pro-input" placeholder="اسم المنتج *" required>
-                        <select id="newProdCat" class="pro-input" required>
-                            <option value="ملازم">ملازم</option>
-                            <option value="قرطاسية">قرطاسية</option>
-                            <option value="مستلزمات مدرسية">مستلزمات مدرسية</option>
-                            <option value="مستلزمات مكتبية">مستلزمات مكتبية</option>
-                            <option value="مستلزمات الرسم">مستلزمات الرسم</option>
-                            <option value="حقائب">حقائب</option>
-                            <option value="هدايا">هدايا</option>
-                        </select>
-                    </div>
-                    <div class="form-row-2">
-                        <input type="number" id="newProdPrice" class="pro-input" placeholder="السعر الحالي (د.ع) *" required min="250">
-                        <input type="number" id="newProdOldPrice" class="pro-input" placeholder="السعر القديم (اختياري للخصم)" min="250">
-                    </div>
-                    <div class="form-row-2">
-                        <input type="text" id="newProdImg" class="pro-input" placeholder="رابط الصورة أو مسارها (images/1.jpg) *" required>
-                    <div style="margin-top:8px;"><label style="font-size:0.85rem;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-image"></i> أو اختر صورة أو أكثر من جهازك: <input type="file" id="prodImgFile" accept="image/*" multiple style="font-size:0.8rem;"></label></div>
-                        <input type="text" id="newProdVariants" class="pro-input" placeholder="خيارات (مفصولة بفاصلة: أزرق, أسود, أحمر)">
-                    </div>
-                    <input type="text" id="newProdDesc" class="pro-input" placeholder="وصف احترافي للمنتج *" required>
-                    <button type="submit" class="confirm-whatsapp-btn" style="margin-top: 5px;">نشر المنتج في المتجر</button>
-                </form>
-
-                <button type="button" id="exportProductsBtn" class="export-code-btn">
-                    <i class="fas fa-copy"></i> نسخ كود المنتجات المحدث للنشر على GitHub
-                </button>
-
-                <div class="admin-prod-list" id="adminProductsList"></div>
+    <!-- شريط السلة السفلي المتزامن -->
+    <div id="stickyCartBar" class="sticky-cart-bar hidden">
+        <div class="sticky-cart-info">
+            <span class="sticky-badge" id="stickyCartCount">0</span>
+            <div>
+                <div style="font-size:0.8rem;opacity:0.9;">إجمالي السلة</div>
+                <div style="font-weight:800;font-size:1.05rem;" id="stickyCartTotal">0 د.ع</div>
             </div>
         </div>
+        <button type="button" id="openStickyCartBtn" class="sticky-cart-btn">
+            <span>عرض السلة وإتمام الطلب</span>
+            <i class="fas fa-arrow-left"></i>
+        </button>
     </div>
 
-    <!-- شريط السلة العائم أسفل الشاشة -->
-<div id="stickyCartBar" class="sticky-cart-bar hidden">
-    <div class="sticky-cart-info">
-        <span class="sticky-badge" id="stickyCartCount">0</span>
-        <div>
-            <div style="font-size:0.8rem;opacity:0.9;">إجمالي السلة</div>
-            <div style="font-weight:800;font-size:1.05rem;" id="stickyCartTotal">0 د.ع</div>
+    <!-- نافذة التنبيهات المخصصة للبراند -->
+    <div class="ym-dialog-overlay" id="ymDialogOverlay">
+        <div class="ym-dialog-card">
+            <div class="ym-dialog-icon"><i class="fas fa-check"></i></div>
+            <h4 id="ymDialogTitle">إشعار المتجر</h4>
+            <p id="ymDialogMessage"></p>
+            <button type="button" class="ym-dialog-btn" id="ymDialogCloseBtn">حسناً</button>
         </div>
     </div>
-    <button type="button" id="openStickyCartBtn" class="sticky-cart-btn">
-        <span>إتمام الطلب</span>
-        <i class="fas fa-arrow-left"></i>
-    </button>
-</div>
-
-<!-- نافذة حساب الزبون -->
-<div class="pro-modal-overlay" id="customerModal">
-    <div class="pro-modal-box" style="max-width:440px;">
-        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="margin:0;"><i class="fas fa-user-check" style="color:var(--accent);"></i> حسابي في مكتبة ياسين المولى</h3>
-            <button type="button" id="closeCustomerModal" class="icon-btn"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="customerAuthForm" style="display:flex;flex-direction:column;gap:12px;">
-            <input type="text" id="custNameInput" placeholder="الاسم الكامل (مثال: علي حسين)" required class="form-input">
-            <input type="tel" id="custPhoneInput" placeholder="رقم الهاتف (077 / 078...)" required class="form-input">
-            <select id="custGovInput" class="form-input">
-                <option value="بغداد">بغداد</option>
-                <option value="البصرة">البصرة</option>
-                <option value="نينوى">نينوى</option>
-                <option value="أربيل">أربيل</option>
-                <option value="النجف">النجف</option>
-                <option value="كربلاء">كربلاء</option>
-                <option value="بابل">بابل</option>
-                <option value="الأنبار">الأنبار</option>
-                <option value="ديالى">ديالى</option>
-                <option value="ذي قار">ذي قار</option>
-                <option value="كركوك">كركوك</option>
-                <option value="صلاح الدين">صلاح الدين</option>
-                <option value="واسط">واسط</option>
-                <option value="ميسان">ميسان</option>
-                <option value="الديوانية">الديوانية</option>
-                <option value="المثنى">المثنى</option>
-                <option value="السليمانية">السليمانية</option>
-                <option value="دهوك">دهوك</option>
-            </select>
-            <input type="text" id="custAddressInput" placeholder="العنوان بالتفصيل (المنطقة / أقرب نقطة دالة)" required class="form-input">
-            <button type="submit" class="btn-primary" style="width:100%;padding:12px;border-radius:10px;font-weight:700;">حفظ وتفعيل الحساب</button>
-            <button type="button" id="logoutCustomerBtn" class="hidden" style="background:#ef4444;color:#fff;border:none;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;">تسجيل الخروج</button>
-        </form>
-    </div>
-</div>
 
     <div id="toastContainer" class="toast-stack"></div>
 
-    <script src="assets/js/security.js?v=15"></script>
-    <script src="assets/js/app.js?v=15"></script>
-<!-- === ENTERPRISE_UPGRADE_START === -->
-<!-- زر حساب الزبون العائم أعلى اليسار -->
-<button type="button" id="floatingCustBtn" style="position:fixed;top:14px;left:14px;z-index:1005;background:#0f172a;color:#fff;border:1px solid rgba(255,255,255,0.2);padding:8px 14px;border-radius:12px;font-family:inherit;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
-    <i class="fas fa-user-circle" style="color:#f25011;font-size:1.1rem;"></i>
-    <span id="floatingCustName">دخول / حساب</span>
-</button>
+    <!-- ربط Firebase الموحد للمنتجات والطلبات قبل تحميل منطق المتجر -->
+    <script>
+        (function() {
+            const FIREBASE_BASE = 'https://yassin-library-default-rtdb.firebaseio.com';
 
-<!-- شريط السلة الثابت أسفل الشاشة -->
-<div id="bottomCartBar" style="display:none;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:540px;background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:12px 18px;border-radius:16px;justify-content:space-between;align-items:center;box-shadow:0 10px 28px rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.15);z-index:1005;">
-    <div style="display:flex;align-items:center;gap:12px;">
-        <span id="bottomCartCount" style="background:#f25011;color:#fff;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;">0</span>
-        <div>
-            <div style="font-size:0.78rem;opacity:0.85;">مجموع مشترياتك</div>
-            <div id="bottomCartTotal" style="font-weight:800;font-size:1.05rem;">0 د.ع</div>
-        </div>
-    </div>
-    <button type="button" id="bottomCartOpenBtn" style="background:#f25011;color:#fff;border:none;padding:10px 18px;border-radius:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;">
-        <span>عرض السلة وإتمام الطلب</span>
-        <i class="fas fa-arrow-left"></i>
-    </button>
-</div>
-
-<!-- نافذة تسجيل الدخول وإنشاء حساب الزبون -->
-<div id="custAuthOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:2000;align-items:center;justify-content:center;padding:16px;">
-    <div style="background:#fff;color:#0f172a;width:100%;max-width:420px;border-radius:18px;padding:22px;box-shadow:0 20px 40px rgba(0,0,0,0.3);position:relative;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">
-            <h3 style="margin:0;font-size:1.1rem;"><i class="fas fa-user-check" style="color:#f25011;"></i> حسابي في مكتبة ياسين المولى</h3>
-            <button type="button" id="closeCustAuthBtn" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#64748b;"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="custProfileForm" style="display:flex;flex-direction:column;gap:12px;">
-            <input type="text" id="cName" placeholder="الاسم الكامل (مثال: محمد علي)" required style="padding:11px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;">
-            <input type="tel" id="cPhone" placeholder="رقم الهاتف (077 / 078...)" required style="padding:11px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;">
-            <select id="cGov" style="padding:11px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;">
-                <option value="بغداد">بغداد</option>
-                <option value="البصرة">البصرة</option>
-                <option value="نينوى">نينوى</option>
-                <option value="أربيل">أربيل</option>
-                <option value="النجف">النجف</option>
-                <option value="كربلاء">كربلاء</option>
-                <option value="بابل">بابل</option>
-                <option value="الأنبار">الأنبار</option>
-                <option value="ديالى">ديالى</option>
-                <option value="ذي قار">ذي قار</option>
-                <option value="كركوك">كركوك</option>
-                <option value="صلاح الدين">صلاح الدين</option>
-                <option value="واسط">واسط</option>
-                <option value="ميسان">ميسان</option>
-                <option value="الديوانية">الديوانية</option>
-                <option value="المثنى">المثنى</option>
-                <option value="السليمانية">السليمانية</option>
-                <option value="دهوك">دهوك</option>
-            </select>
-            <input type="text" id="cAddr" placeholder="العنوان التفصيلي (المنطقة / أقرب نقطة دالة)" required style="padding:11px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;">
-            <button type="submit" style="background:#f25011;color:#fff;border:none;padding:12px;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:1rem;">حفظ وتفعيل الحساب</button>
-            <button type="button" id="cLogoutBtn" style="display:none;background:#ef4444;color:#fff;border:none;padding:10px;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;">تسجيل الخروج</button>
-        </form>
-    </div>
-</div>
-<!-- === ENTERPRISE_UPGRADE_END === -->
-<script src="assets/js/pro-features.js?v=100"></script>
-<script src="assets/js/pro-features.js?v=200"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var lockBtn = document.getElementById('adminLoginBtn') || document.querySelector('[id*="admin"], .admin-btn, .fa-lock');
-    if (lockBtn) {
-        var clickable = lockBtn.closest('button, a') || lockBtn;
-        clickable.onclick = function(e) {
-            e.preventDefault();
-            window.location.href = 'admin.html';
-        };
-    }
-});
-</script>
-
-<script>
-(function() {
-    function syncStickyCartLive() {
-        var bottomBar = document.getElementById('stickyCartBar') || Array.from(document.querySelectorAll('div')).find(function(el) {
-            return el.style.position === 'fixed' && el.textContent.indexOf('مجموع مشترياتك') !== -1;
-        });
-        if (!bottomBar) return;
-
-        // 1. استخراج العدد والمجموع من أعلى الصفحة (الهيدر) مباشرة بدقة 100%
-        var headerCountEl = document.querySelector('#cartCount, .cart-count, header .badge, nav .badge');
-        var count = headerCountEl ? parseInt(headerCountEl.textContent.replace(/\D/g, '') || '0', 10) : 0;
-
-        // البحث عن السعر في الهيدر أو حسابه من العناصر المخزنة
-        var total = 0;
-        var headerElements = Array.from(document.querySelectorAll('header *, nav *'));
-        for (var i = 0; i < headerElements.length; i++) {
-            var txt = headerElements[i].textContent.trim();
-            if (headerElements[i].children.length === 0 && /^\d[\d,]*\s*د\.ع$/.test(txt)) {
-                var val = parseInt(txt.replace(/\D/g, '') || '0', 10);
-                if (val > 0) { total = val; break; }
-            }
-        }
-
-        // خطة بديلة لحساب السعر من LocalStorage مهما كان اسم المفتاح
-        if (total === 0) {
-            for (var k = 0; k < localStorage.length; k++) {
-                try {
-                    var arr = JSON.parse(localStorage.getItem(localStorage.key(k)));
-                    if (Array.isArray(arr) && arr.length > 0 && arr[0] && (arr[0].price || arr[0].name)) {
-                        var sum = 0, cnt = 0;
-                        arr.forEach(function(it) {
-                            var q = Number(it.qty || it.quantity || it.count || 1);
-                            var p = Number(String(it.price || 0).replace(/\D/g, ''));
-                            if (p > 0) { sum += p * q; cnt += q; }
-                        });
-                        if (sum > 0) { total = sum; if (count === 0) count = cnt; break; }
-                    }
-                } catch(e) {}
-            }
-        }
-
-        bottomBar.style.display = count > 0 ? 'flex' : 'none';
-
-        // 2. تحديث النصوص داخل الشريط السفلي
-        bottomBar.querySelectorAll('span, div, b, strong').forEach(function(el) {
-            if (el.children.length > 0) return;
-            var t = el.textContent.trim();
-            if (/^\d+$/.test(t)) el.textContent = count;
-            if (t.indexOf('د.ع') !== -1) el.textContent = total.toLocaleString() + ' د.ع';
-        });
-
-        // 3. ربط زر "عرض السلة وإتمام الطلب" بزر السلة العلوي الأصلي
-        var btn = bottomBar.querySelector('button');
-        if (btn && !btn.dataset.cartLinked) {
-            btn.dataset.cartLinked = '1';
-            btn.onclick = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var topTrigger = (headerCountEl && headerCountEl.closest('button, a, div[onclick]')) ||
-                                 document.querySelector('#cartBtn, .cart-btn, [onclick*="cart"], [onclick*="Cart"]');
-                if (topTrigger) {
-                    topTrigger.click();
-                } else {
-                    var modal = document.querySelector('#cartModal, .cart-modal, #cartSidebar, .cart-drawer');
-                    if (modal) { modal.style.display = 'flex'; modal.classList.add('active', 'open'); }
-                }
+            // 1. نافذة إشعارات مخصصة بديلة عن alert المتصفح التقليدي
+            window.showStoreDialog = function(title, message, onClose) {
+                const overlay = document.getElementById('ymDialogOverlay');
+                document.getElementById('ymDialogTitle').textContent = title;
+                document.getElementById('ymDialogMessage').textContent = message;
+                overlay.style.display = 'flex';
+                document.getElementById('ymDialogCloseBtn').onclick = function() {
+                    overlay.style.display = 'none';
+                    if (typeof onClose === 'function') onClose();
+                };
             };
-        }
-    }
 
-    document.addEventListener('click', function() { setTimeout(syncStickyCartLive, 120); });
-    setInterval(syncStickyCartLive, 400);
-})();
-</script>
-
-
-
-
-<!-- ============================================================ -->
-<!-- 🛒 نظام السلة الفاخرة والطلب المباشر الحصري للوحة الإدارة -->
-<!-- ============================================================ -->
-
-
-
-<style id="ym-clean-cart-style">
-    /* إخفاء أيقونة الواتساب من زر إتمام الطلب وتجميل الزر */
-    aside button .fa-whatsapp,
-    #cartSidebar button .fa-whatsapp,
-    aside button i[class*="whatsapp"],
-    #cartSidebar button i[class*="whatsapp"] {
-        display: none !important;
-    }
-    /* ضمان عدم وجود أي صندوق مكرر */
-    #ym-inline-checkout-box {
-        display: none !important;
-    }
-</style>
-
-<script id="ym-direct-firebase-hook">
-(function() {
-    var DB_URL = 'https://yassin-library-default-rtdb.firebaseio.com/orders.json';
-
-    // 1. منع فتح واتساب للطلبات نهائياً
-    var origOpen = window.open;
-    window.open = function(url) {
-        if (typeof url === 'string' && (url.indexOf('wa.me') !== -1 || url.indexOf('whatsapp.com') !== -1) && url.indexOf('text=') !== -1) {
-            return null;
-        }
-        return origOpen.apply(this, arguments);
-    };
-
-    // 2. قراءة السلة الحقيقية
-    function getCartItems() {
-        for (var k = 0; k < localStorage.length; k++) {
-            var key = localStorage.key(k);
-            if (!key || key.indexOf('product') !== -1 || key.indexOf('admin') !== -1) continue;
-            try {
-                var arr = JSON.parse(localStorage.getItem(key));
-                if (Array.isArray(arr) && arr.length > 0 && arr[0] && (arr[0].name || arr[0].price)) {
-                    return arr;
+            // 2. جلب المنتجات الحية من Firebase وتحديث المتجر تلقائياً
+            const nativeFetch = window.fetch;
+            window.fetch = function(resource, init) {
+                if (typeof resource === 'string' && resource.includes('products.json') && !resource.includes('firebaseio.com')) {
+                    return nativeFetch(`${FIREBASE_BASE}/products.json?t=${Date.now()}`)
+                        .then(res => res.json())
+                        .then(cloudProducts => {
+                            if (Array.isArray(cloudProducts) && cloudProducts.length > 0) {
+                                const jsonStr = JSON.stringify(cloudProducts);
+                                localStorage.setItem('yassin_products', jsonStr);
+                                localStorage.setItem('products', jsonStr);
+                                return new Response(jsonStr, {
+                                    status: 200,
+                                    headers: { 'Content-Type': 'application/json' }
+                                });
+                            }
+                            return nativeFetch(resource, init);
+                        })
+                        .catch(() => nativeFetch(resource, init));
                 }
-            } catch(e) {}
-        }
-        return [];
-    }
+                return nativeFetch.apply(this, arguments);
+            };
 
-    // 3. ربط الزر الأصلي داخل السلة بإرسال الطلب إلى لوحة الإدارة مباشرة
-    function hookOriginalCartButton() {
-        var drawer = document.querySelector('aside, #cartSidebar, .cart-drawer');
-        if (!drawer) return;
+            // 3. إدارة حساب الزبون وتعبئة حقول السلة تلقائياً
+            document.addEventListener('DOMContentLoaded', () => {
+                const openProfileBtn = document.getElementById('openCustomerProfileBtn');
+                const customerModal = document.getElementById('customerModal');
+                const closeCustomerModal = document.getElementById('closeCustomerModal');
+                const customerForm = document.getElementById('customerAuthForm');
 
-        var buttons = drawer.querySelectorAll('button');
-        buttons.forEach(function(btn) {
-            var txt = (btn.textContent || '').trim();
-            if (txt.indexOf('إرسال الطلب') !== -1 || txt.indexOf('تأكيد الفاتورة') !== -1) {
-                if (!btn.dataset.ymHooked) {
-                    btn.dataset.ymHooked = '1';
-                    btn.style.background = 'linear-gradient(135deg, #f25011, #ea580c)';
-                    btn.innerHTML = '🚀 تأكيد وإرسال الطلب للمكتبة';
+                function syncCustomerData() {
+                    const saved = JSON.parse(localStorage.getItem('ym_customer_profile') || 'null');
+                    if (saved) {
+                        document.getElementById('headerCustomerName').textContent = saved.name.split(' ')[0];
+                        document.getElementById('custNameInput').value = saved.name || '';
+                        document.getElementById('custPhoneInput').value = saved.phone || '';
+                        document.getElementById('custGovInput').value = saved.city || 'بغداد';
+                        document.getElementById('custAddressInput').value = saved.address || '';
+                        document.getElementById('logoutCustomerBtn').classList.remove('hidden');
 
-                    // استبدال مستمع الحدث القديم بالكامل عبر نسخ الزر
-                    var cleanBtn = btn.cloneNode(true);
-                    btn.parentNode.replaceChild(cleanBtn, btn);
+                        // تعبئة نموذج السلة تلقائياً
+                        if (document.getElementById('custName')) document.getElementById('custName').value = saved.name || '';
+                        if (document.getElementById('custPhone')) document.getElementById('custPhone').value = saved.phone || '';
+                        if (document.getElementById('custCity')) document.getElementById('custCity').value = saved.city || '';
+                        if (document.getElementById('custAddress')) document.getElementById('custAddress').value = saved.address || '';
+                    }
+                }
 
-                    cleanBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        sendDirectOrderFromOriginalFields(drawer, cleanBtn);
+                syncCustomerData();
+
+                openProfileBtn?.addEventListener('click', () => customerModal.classList.add('active'));
+                closeCustomerModal?.addEventListener('click', () => customerModal.classList.remove('active'));
+
+                customerForm?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const profile = {
+                        name: document.getElementById('custNameInput').value.trim(),
+                        phone: document.getElementById('custPhoneInput').value.trim(),
+                        city: document.getElementById('custGovInput').value,
+                        address: document.getElementById('custAddressInput').value.trim()
+                    };
+                    localStorage.setItem('ym_customer_profile', JSON.stringify(profile));
+                    syncCustomerData();
+                    customerModal.classList.remove('active');
+                    showStoreDialog('تم حفظ البيانات', 'تم حفظ بيانات التوصيل الخاصة بك بنجاح لتسهيل طلباتك القادمة.');
+                });
+
+                document.getElementById('logoutCustomerBtn')?.addEventListener('click', () => {
+                    localStorage.removeItem('ym_customer_profile');
+                    document.getElementById('headerCustomerName').textContent = 'حسابي';
+                    customerForm.reset();
+                    document.getElementById('logoutCustomerBtn').classList.add('hidden');
+                    customerModal.classList.remove('active');
+                });
+
+                // 4. إرسال الطلب مباشرة إلى Firebase بدون واتساب
+                const checkoutForm = document.getElementById('checkoutForm');
+                checkoutForm?.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    const name = document.getElementById('custName').value.trim();
+                    const phone = document.getElementById('custPhone').value.trim();
+                    const citySelect = document.getElementById('custCity');
+                    const city = citySelect.value;
+                    const address = document.getElementById('custAddress').value.trim();
+
+                    // قراءة عناصر السلة من الذاكرة
+                    let cartItems = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const k = localStorage.key(i);
+                        if (k && k.toLowerCase().includes('cart')) {
+                            try {
+                                const parsed = JSON.parse(localStorage.getItem(k));
+                                if (Array.isArray(parsed) && parsed.length > 0) {
+                                    cartItems = parsed;
+                                    break;
+                                }
+                            } catch (err) {}
+                        }
+                    }
+
+                    if (!cartItems.length) {
+                        showStoreDialog('السلة فارغة', 'يرجى إضافة منتج واحد على الأقل إلى السلة قبل إتمام الطلب.');
+                        return;
+                    }
+
+                    const finalTotalText = document.getElementById('finalTotalPrice')?.textContent || '0';
+                    const finalTotal = parseInt(finalTotalText.replace(/\D/g, '') || '0', 10);
+                    const itemsSummary = cartItems.map(item => `${item.name} (×${item.qty || item.quantity || 1})`).join(' + ');
+                    const orderCode = 'YM-' + Math.floor(1000 + Math.random() * 9000);
+
+                    const submitBtn = document.getElementById('directSubmitOrderBtn');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إرسال الطلب...';
+
+                    nativeFetch(`${FIREBASE_BASE}/orders.json`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: orderCode,
+                            name: name,
+                            phone: phone,
+                            addr: `${city} - ${address}`,
+                            items: itemsSummary,
+                            total: finalTotal,
+                            notes: '',
+                            status: 'جديد',
+                            date: new Date().toLocaleString('ar-IQ'),
+                            timestamp: Date.now()
+                        })
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error('Failed');
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const k = localStorage.key(i);
+                            if (k && k.toLowerCase().includes('cart')) localStorage.removeItem(k);
+                        }
+                        showStoreDialog(
+                            'تم استلام طلبك بنجاح',
+                            `رقم الطلب: #${orderCode}\nالإجمالي النهائي: ${finalTotal.toLocaleString()} د.ع\nسيتواصل معك فريق التجهيز في مكتبة ياسين المولى قريباً.`,
+                            () => location.reload()
+                        );
+                    })
+                    .catch(() => {
+                        showStoreDialog('تعذر الإرسال', 'حدث خطأ في الاتصال بالشبكة، يرجى المحاولة مرة أخرى.');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد وإرسال الطلب';
                     });
-                }
-            }
-        });
-    }
-
-    function sendDirectOrderFromOriginalFields(drawer, btn) {
-        var items = getCartItems();
-        if (!items.length) {
-            alert('السلة فارغة! أضف منتجاً واحداً على الأقل.');
-            return;
-        }
-
-        // جلب البيانات من الحقول الأصلية الموجودة في السلة
-        var inputs = Array.from(drawer.querySelectorAll('input:not([placeholder*="الخصم"]), select'));
-        var name = '', phone = '', gov = '', addr = '';
-
-        inputs.forEach(function(el) {
-            var ph = (el.getAttribute('placeholder') || '') + ' ' + (el.id || '') + ' ' + (el.name || '');
-            var val = (el.value || '').trim();
-            if (el.tagName === 'SELECT') {
-                gov = el.options[el.selectedIndex] ? el.options[el.selectedIndex].text.split('(')[0].trim() : val;
-            } else if (ph.indexOf('الاسم') !== -1 || ph.toLowerCase().indexOf('name') !== -1) {
-                name = val;
-            } else if (ph.indexOf('الهاتف') !== -1 || ph.indexOf('07') !== -1 || ph.toLowerCase().indexOf('phone') !== -1) {
-                phone = val;
-            } else if (ph.indexOf('العنوان') !== -1 || ph.indexOf('المنطقة') !== -1 || ph.toLowerCase().indexOf('addr') !== -1) {
-                addr = val;
-            }
-        });
-
-        if (!name || !phone || !addr || !gov || gov.indexOf('اختر') !== -1) {
-            alert('يرجى ملء الاسم الكامل، رقم الهاتف، المحافظة، والعنوان بالتفصيل.');
-            return;
-        }
-
-        // قراءة الإجمالي النهائي المعروض في السلة (شامل الخصم والتوصيل المجاني)
-        var finalTotal = 0;
-        drawer.querySelectorAll('div, span, b, strong').forEach(function(el) {
-            if (el.children.length === 0 && el.textContent.indexOf('د.ع') !== -1) {
-                var num = parseInt(el.textContent.replace(/\D/g, '') || '0', 10);
-                if (num > 0) finalTotal = num;
-            }
-        });
-
-        var itemsSummary = items.map(function(it) {
-            var q = Number(it.qty || it.quantity || 1);
-            return (it.name || 'منتج') + ' (×' + q + ')';
-        }).join(' + ');
-
-        var orderCode = 'YM-' + Math.floor(1000 + Math.random() * 9000);
-
-        btn.disabled = true;
-        btn.textContent = '⏳ جاري إرسال طلبك للمكتبة...';
-
-        fetch(DB_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: orderCode,
-                name: name,
-                phone: phone,
-                addr: gov + ' - ' + addr,
-                items: itemsSummary,
-                total: finalTotal,
-                notes: '',
-                status: 'جديد',
-                date: new Date().toLocaleString('ar-IQ'),
-                timestamp: Date.now()
-            })
-        })
-        .then(function(res) {
-            if (!res.ok) throw new Error('Network error');
-            for (var k = 0; k < localStorage.length; k++) {
-                var key = localStorage.key(k);
-                if (key && key.toLowerCase().indexOf('cart') !== -1) localStorage.removeItem(key);
-            }
-            alert('🎉 تم استلام طلبك بنجاح في مكتبة ياسين المولى!\n\nرقم الطلب: #' + orderCode + '\nالإجمالي: ' + finalTotal.toLocaleString() + ' د.ع\nسيتواصل معك فريق التجهيز قريباً.');
-            location.reload();
-        })
-        .catch(function() {
-            alert('حدث خطأ في الاتصال، يرجى المحاولة مرة أخرى.');
-            btn.disabled = false;
-            btn.textContent = '🚀 تأكيد وإرسال الطلب للمكتبة';
-        });
-    }
-
-    setInterval(hookOriginalCartButton, 350);
-    window.addEventListener('DOMContentLoaded', hookOriginalCartButton);
-})();
-</script>
-<script id="ymMirrorHeaderCart">
-(function() {
-    function findTopCartWidget() {
-        // البحث عن المربع الأسود في الهيدر الذي يحتوي على كلمة "السلة" و "د.ع"
-        var candidates = Array.from(document.querySelectorAll('header button, header a, header div, nav button, nav a, nav div'));
-        return candidates.find(function(el) {
-            var t = (el.textContent || '').trim();
-            return t.indexOf('السلة') !== -1 && t.indexOf('د.ع') !== -1 && el.offsetHeight > 20 && el.offsetHeight < 90;
-        });
-    }
-
-    function findBottomCartBar() {
-        return Array.from(document.querySelectorAll('div')).find(function(el) {
-            var st = window.getComputedStyle(el);
-            return st.position === 'fixed' && (el.textContent || '').indexOf('مجموع مشترياتك') !== -1;
-        });
-    }
-
-    function mirrorNow() {
-        var topBox = findTopCartWidget();
-        var bottomBar = findBottomCartBar();
-        if (!topBox || !bottomBar) return;
-
-        // 1. استخراج العدد والمبلغ من المربع الأسود العلوي مباشرة
-        var topText = topBox.innerText || topBox.textContent || '';
-        var priceMatch = topText.match(/(\d[\d,]*)\s*د\.ع/);
-        var totalPriceText = priceMatch ? (priceMatch[1] + ' د.ع') : '0 د.ع';
-        var numericPrice = priceMatch ? parseInt(priceMatch[1].replace(/\D/g, '') || '0', 10) : 0;
-
-        // استخراج عدد القطع (الرقم المنفصل في المربع العلوي)
-        var countNum = 0;
-        topBox.querySelectorAll('span, div, b, strong').forEach(function(node) {
-            if (node.children.length === 0) {
-                var s = node.textContent.trim();
-                if (/^\d+$/.test(s)) countNum = parseInt(s, 10);
-            }
-        });
-        if (countNum === 0 && numericPrice > 0) countNum = 1;
-
-        // 2. إظهار أو إخفاء الشريط السفلي حسب وجود منتجات
-        bottomBar.style.display = (countNum > 0 || numericPrice > 0) ? 'flex' : 'none';
-
-        // 3. تحديث الرقم داخل المربع البرتقالي الصغير وتحديث السعر بجانب "مجموع مشترياتك"
-        bottomBar.querySelectorAll('span, div, b, strong').forEach(function(el) {
-            if (el.children.length > 0) return;
-            var txt = el.textContent.trim();
-            if (/^\d+$/.test(txt)) {
-                el.textContent = countNum;
-            } else if (txt.indexOf('د.ع') !== -1) {
-                el.textContent = totalPriceText;
-            }
-        });
-
-        // 4. ربط زر "عرض السلة وإتمام الطلب" ليضغط على المربع الأسود العلوي مباشرة
-        var openBtn = bottomBar.querySelector('button');
-        if (openBtn && !openBtn.dataset.mirroredClick) {
-            openBtn.dataset.mirroredClick = '1';
-            openBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                topBox.click();
+                }, true);
             });
-        }
-    }
+        })();
+    </script>
 
-    // مراقبة فورية لأي تغيير يحدث في المربع العلوي (بدون تأخير)
-    window.addEventListener('DOMContentLoaded', function() {
-        mirrorNow();
-        var topBox = findTopCartWidget();
-        if (topBox) {
-            new MutationObserver(mirrorNow).observe(topBox, { childList: true, subtree: true, characterData: true });
-        }
-    });
-    setInterval(mirrorNow, 250);
-})();
-</script>
-<script id="ymFixBottomOpenBtn">
-(function() {
-    function openCartDrawerDirectly() {
-        // 1. محاولة الضغط على زر السلة الحقيقي في الهيدر
-        var headerBtns = Array.from(document.querySelectorAll('header button, header a, nav button, nav a'));
-        var realCartBtn = headerBtns.find(function(el) {
-            var t = (el.textContent || '');
-            return t.indexOf('السلة') !== -1 || (el.id || '').toLowerCase().indexOf('cart') !== -1 || (el.className || '').toLowerCase().indexOf('cart') !== -1;
-        });
-        if (realCartBtn) {
-            realCartBtn.click();
-        }
-
-        // 2. فتح السلة الجانبية (aside) والطبقة المعتمة التي تسبقها مباشرة كضمان إضافي
-        var asideDrawer = document.querySelector('aside, #cartSidebar, .cart-drawer');
-        if (asideDrawer) {
-            asideDrawer.style.display = 'flex';
-            asideDrawer.style.visibility = 'visible';
-            asideDrawer.style.opacity = '1';
-            asideDrawer.style.transform = 'translateX(0)';
-            asideDrawer.style.right = '0';
-            asideDrawer.classList.add('active', 'open', 'show');
-
-            var prevOverlay = asideDrawer.previousElementSibling;
-            if (prevOverlay && prevOverlay.tagName === 'DIV') {
-                prevOverlay.style.display = 'block';
-                prevOverlay.style.visibility = 'visible';
-                prevOverlay.style.opacity = '1';
-                prevOverlay.classList.add('active', 'open', 'show');
-            }
-        }
-    }
-
-    function bindBottomBar() {
-        var bottomBar = Array.from(document.querySelectorAll('div')).find(function(el) {
-            var st = window.getComputedStyle(el);
-            return st.position === 'fixed' && (el.textContent || '').indexOf('مجموع مشترياتك') !== -1;
-        });
-        if (!bottomBar) return;
-
-        // رفع الشريط السفلي فوق أي طبقة شفافة قد تمنع النقر
-        bottomBar.style.zIndex = '99998';
-        bottomBar.style.pointerEvents = 'auto';
-
-        var orangeBtn = bottomBar.querySelector('button');
-        if (orangeBtn && !orangeBtn.dataset.ymFixedOpen) {
-            orangeBtn.dataset.ymFixedOpen = '1';
-            orangeBtn.style.cursor = 'pointer';
-            orangeBtn.style.pointerEvents = 'auto';
-
-            // إزالة أي مستمع قديم وربط الفتح المباشر
-            var newBtn = orangeBtn.cloneNode(true);
-            orangeBtn.parentNode.replaceChild(newBtn, orangeBtn);
-
-            newBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                openCartDrawerDirectly();
-            });
-        }
-    }
-
-    setInterval(bindBottomBar, 300);
-    window.addEventListener('DOMContentLoaded', bindBottomBar);
-})();
-</script>
-<!-- ============================================================ -->
-<!-- ✨ De-AI Brand Polish & Luxury UI System                     -->
-<!-- ============================================================ -->
-
-
-<div id="ym-custom-modal-overlay">
-    <div id="ym-custom-modal-box">
-        <div style="width:46px;height:46px;background:#fff7ed;color:#f25011;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-weight:900;font-size:1.3rem;border:1px solid #ffedd5;">✓</div>
-        <h4 id="ym-modal-title">إشعار النظام</h4>
-        <p id="ym-modal-msg"></p>
-        <button id="ym-custom-modal-btn" onclick="document.getElementById('ym-custom-modal-overlay').style.display='none'">حسناً، متابعة</button>
-    </div>
-</div>
-
-
-<!-- ============================================================ -->
-<!-- 🏛️ Yassin Al-Mawla Luxury Brand Overhaul & Cache Buster     -->
-<!-- ============================================================ -->
-<style id="ym-luxury-overhaul">
-    /* 1. توحيد ألوان بطاقات الخدمات التفاعلية (إلغاء ألوان قوس قزح بالكامل) */
-    main section button,
-    [class*="tool"], [class*="feature"], [class*="service"], [class*="card-btn"],
-    div[style*="grid"] > button, div[style*="grid"] > div[onclick] {
-        background: #ffffff !important;
-        background-image: none !important;
-        color: #0f172a !important;
-        border: 1.5px solid #e2e8f0 !important;
-        border-radius: 16px !important;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-    main section button:hover,
-    [class*="tool"]:hover, [class*="feature"]:hover, [class*="service"]:hover,
-    div[style*="grid"] > button:hover, div[style*="grid"] > div[onclick]:hover {
-        border-color: #f25011 !important;
-        background: #fffaf7 !important;
-        transform: translateY(-4px) !important;
-        box-shadow: 0 12px 24px rgba(242, 80, 17, 0.1) !important;
-    }
-    main section button *,
-    [class*="tool"] *, [class*="feature"] *, [class*="service"] *,
-    div[style*="grid"] > button *, div[style*="grid"] > div[onclick] * {
-        color: #0f172a !important;
-    }
-
-    /* 2. تهذيب الشريط العلوي (Top Bar) ليكون بلون الكحلي الفاخر */
-    body > div:first-of-type {
-        background: #0f172a !important;
-        background-image: none !important;
-        color: #f8fafc !important;
-        border-bottom: 1px solid #1e293b !important;
-    }
-
-    /* 3. تهذيب بطاقات المنتجات وأزرار الإضافة للسلة */
-    .product-card, article {
-        background: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 16px !important;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03) !important;
-    }
-    .product-card button, article button {
-        background: #0f172a !important;
-        color: #ffffff !important;
-        border-radius: 10px !important;
-        font-weight: 700 !important;
-        border: none !important;
-    }
-    .product-card button:hover, article button:hover {
-        background: #f25011 !important;
-    }
-
-    /* 4. إخفاء الإشعارات الوهمية بالكامل */
-    .social-proof-toast {
-        display: none !important;
-    }
-</style>
-
-<script id="ym-cache-buster-and-clean">
-(function() {
-    // 1. إلغاء تسجيل Service Worker القديم الذي يحبس النسخة القديمة في الكاش
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(regs) {
-            regs.forEach(function(r) { r.unregister(); });
-        });
-    }
-    if ('caches' in window) {
-        caches.keys().then(function(names) {
-            names.forEach(function(name) { caches.delete(name); });
-        });
-    }
-
-    // 2. تنظيف الإيموجي العشوائي من العناوين والبطاقات
-    function cleanAllEmojis() {
-        var emojiPattern = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
-        document.querySelectorAll('h1, h2, h3, h4, button, a, span, p, div').forEach(function(el) {
-            if (el.children.length === 0 && el.textContent) {
-                var clean = el.textContent.replace(emojiPattern, '').replace(/\s{2,}/g, ' ').trim();
-                if (clean && clean !== el.textContent.trim()) {
-                    el.textContent = clean;
-                }
-            }
-        });
-    }
-
-    window.addEventListener('DOMContentLoaded', cleanAllEmojis);
-    setTimeout(cleanAllEmojis, 400);
-    setTimeout(cleanAllEmojis, 1200);
-})();
-</script>
+    <!-- ملفات المنطق الأساسية للمتجر -->
+    <script src="assets/js/security.js?v=20"></script>
+    <script src="assets/js/app.js?v=20"></script>
 </body>
 </html>
-
-

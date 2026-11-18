@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مركز الإدارة المتكامل | مكتبة ياسين المولى</title>
+    <title>مركز الإدارة | مكتبة ياسين المولى</title>
+    <link rel="icon" href="assets/images/logo.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
             --bg: #0b1120;
@@ -27,14 +29,19 @@
             display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 9999;
         }
         .login-box {
-            background: var(--card); border: 1px solid var(--border); border-radius: 24px;
-            padding: 32px; width: 100%; max-width: 400px; text-align: center;
+            background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+            padding: 36px 32px; width: 100%; max-width: 400px; text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .login-icon {
+            width: 56px; height: 56px; background: rgba(242, 80, 17, 0.12); color: var(--primary);
+            border: 1px solid rgba(242, 80, 17, 0.3); border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.4rem;
         }
         .login-box input {
             width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border);
-            background: var(--surface); color: #fff; font-size: 1.1rem; text-align: center;
-            margin: 16px 0; outline: none;
+            background: var(--surface); color: #fff; font-size: 1.05rem; text-align: center;
+            margin: 18px 0; outline: none;
         }
         .login-box input:focus { border-color: var(--primary); }
         
@@ -43,23 +50,28 @@
             padding: 14px 24px; display: flex; justify-content: space-between;
             align-items: center; flex-wrap: wrap; gap: 12px; position: sticky; top: 0; z-index: 100;
         }
+        .brand-badge {
+            background: var(--primary); width: 42px; height: 42px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #fff;
+        }
         .layout { display: grid; grid-template-columns: 250px 1fr; min-height: calc(100vh - 73px); }
         .sidebar {
             background: var(--card); border-left: 1px solid var(--border);
-            padding: 20px 14px; display: flex; flex-direction: column; gap: 8px;
+            padding: 20px 14px; display: flex; flex-direction: column; gap: 6px;
         }
         .nav-btn {
             background: transparent; color: var(--muted); border: none; padding: 12px 16px;
-            border-radius: 12px; text-align: right; font-size: 0.95rem; font-weight: 700;
+            border-radius: 12px; text-align: right; font-size: 0.92rem; font-weight: 700;
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px;
         }
+        .nav-btn i { width: 18px; text-align: center; }
         .nav-btn:hover, .nav-btn.active { background: var(--primary); color: #fff; }
         .main-content { padding: 24px; max-width: 1200px; width: 100%; margin: 0 auto; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
         .stat-card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 16px; }
         .stat-val { font-size: 1.9rem; font-weight: 900; margin-top: 6px; }
-        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 20px; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
         input, select, textarea {
             width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
@@ -67,8 +79,9 @@
         }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); }
         .btn {
-            background: var(--primary); color: #fff; border: none; padding: 11px 18px;
-            border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: 0.2s;
+            background: var(--primary); color: #fff; border: none; padding: 10px 18px;
+            border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.88rem;
+            display: inline-flex; align-items: center; gap: 7px; transition: 0.2s;
         }
         .btn:hover { background: var(--primary-hover); }
         .btn-success { background: var(--success); }
@@ -78,12 +91,13 @@
         
         .item-row {
             background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-            padding: 12px 16px; display: flex; justify-content: space-between;
+            padding: 14px 16px; display: flex; justify-content: space-between;
             align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 10px;
         }
-        .badge { padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; }
+        .badge { padding: 3px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; }
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
+        .sync-status { font-size: 0.8rem; color: var(--success); font-weight: 700; }
 
         @media (max-width: 820px) {
             .layout { grid-template-columns: 1fr; }
@@ -96,44 +110,44 @@
 
     <div id="loginScreen">
         <div class="login-box">
-            <div style="font-size:3rem;margin-bottom:8px;">🔐</div>
-            <h2 style="margin:0;font-size:1.4rem;">إدارة مكتبة ياسين المولى</h2>
-            <p style="color:var(--muted);font-size:0.88rem;margin:6px 0 0;">أدخل الرمز السري للوصول إلى مركز القيادة</p>
+            <div class="login-icon"><i class="fas fa-shield-alt"></i></div>
+            <h2 style="margin:0;font-size:1.35rem;">إدارة مكتبة ياسين المولى</h2>
+            <p style="color:var(--muted);font-size:0.88rem;margin:6px 0 0;">أدخل الرمز السري للوصول إلى لوحة التحكم</p>
             <input type="password" id="adminPassInput" placeholder="••••••••" onkeypress="if(event.key==='Enter') checkAdminLogin()">
-            <button class="btn" style="width:100%;font-size:1rem;" onclick="checkAdminLogin()">دخول إلى لوحة الإدارة</button>
-            <div style="margin-top:14px;">
-                <a href="index.html" style="color:var(--info);text-decoration:none;font-size:0.85rem;">← العودة إلى واجهة المتجر</a>
+            <button class="btn" style="width:100%;justify-content:center;font-size:0.98rem;padding:12px;" onclick="checkAdminLogin()">تسجيل الدخول</button>
+            <div style="margin-top:16px;">
+                <a href="index.html" style="color:var(--info);text-decoration:none;font-size:0.85rem;"><i class="fas fa-arrow-right"></i> العودة إلى واجهة المتجر</a>
             </div>
         </div>
     </div>
 
     <header class="topbar">
         <div style="display:flex;align-items:center;gap:12px;">
-            <div style="background:var(--primary);width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">👑</div>
+            <div class="brand-badge"><i class="fas fa-layer-group"></i></div>
             <div>
-                <div style="font-weight:900;font-size:1.15rem;">مركز إدارة مكتبة ياسين المولى</div>
-                <div style="font-size:0.78rem;color:var(--muted);">نظام التحكم الشامل بالمخزون والطلبات الحية (Live Firebase)</div>
+                <div style="font-weight:900;font-size:1.1rem;">مركز إدارة مكتبة ياسين المولى</div>
+                <div class="sync-status" id="cloudSyncIndicator"><i class="fas fa-circle" style="font-size:0.55rem;"></i> متصل بالسحابة (Firebase Live)</div>
             </div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="btn btn-success" onclick="copyProductsJson()">📋 نسخ كود المنتجات المحدث (GitHub)</button>
-            <a href="index.html" class="btn btn-dark" style="text-decoration:none;">🏪 معاينة المتجر</a>
+            <button class="btn btn-dark" onclick="syncProductsToCloud(getProducts(), true)"><i class="fas fa-cloud-upload-alt"></i> مزامنة المنتجات الآن</button>
+            <a href="index.html" class="btn btn-dark" style="text-decoration:none;"><i class="fas fa-store"></i> معاينة المتجر</a>
         </div>
     </header>
 
     <div class="layout">
         <aside class="sidebar">
-            <button class="nav-btn active" onclick="switchTab('ordersTab', this)">🔔 الطلبات الحية والزبائن</button>
-            <button class="nav-btn" onclick="switchTab('productsTab', this)">📦 المنتجات والمخزون</button>
-            <button class="nav-btn" onclick="switchTab('shippingTab', this)">🏷️ بوليصة الشحن والتوصيل</button>
-            <button class="nav-btn" onclick="switchTab('marketingTab', this)">📸 التسويق والكوبونات</button>
-            <button class="nav-btn" onclick="switchTab('backupTab', this)">💾 النسخ الاحتياطي والجرد</button>
+            <button class="nav-btn active" onclick="switchTab('ordersTab', this)"><i class="fas fa-bell"></i> الطلبات الحية والزبائن</button>
+            <button class="nav-btn" onclick="switchTab('productsTab', this)"><i class="fas fa-boxes"></i> المنتجات والمخزون</button>
+            <button class="nav-btn" onclick="switchTab('shippingTab', this)"><i class="fas fa-tag"></i> بوليصة الشحن</button>
+            <button class="nav-btn" onclick="switchTab('marketingTab', this)"><i class="fas fa-bullhorn"></i> التسويق والعروض</button>
+            <button class="nav-btn" onclick="switchTab('backupTab', this)"><i class="fas fa-database"></i> النسخ الاحتياطي والجرد</button>
         </aside>
 
         <main class="main-content">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div style="color:var(--muted);font-size:0.85rem;">الطلبات الحية (Firebase)</div>
+                    <div style="color:var(--muted);font-size:0.85rem;">الطلبات الحية</div>
                     <div class="stat-val" style="color:var(--info);" id="stOrders">0</div>
                 </div>
                 <div class="stat-card">
@@ -150,15 +164,15 @@
                 </div>
             </div>
 
-            <!-- 1. تبويب الطلبات الحية والزبائن -->
+            <!-- 1. تبويب الطلبات الحية -->
             <div id="ordersTab" class="tab-pane active">
                 <div class="panel">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-                        <h3 style="margin:0;color:var(--info);">🔔 الطلبات الواردة مباشرة من المتجر (تحديث تلقائي كل 5 ثوانٍ)</h3>
-                        <button class="btn btn-dark" onclick="fetchLiveFirebaseOrders()">🔄 تحديث الآن</button>
+                        <h3 style="margin:0;color:var(--info);"><i class="fas fa-satellite-dish"></i> الطلبات الواردة مباشرة من المتجر</h3>
+                        <button class="btn btn-dark" onclick="fetchLiveFirebaseOrders()"><i class="fas fa-sync-alt"></i> تحديث الآن</button>
                     </div>
                     <div id="adminOrdersContainer">
-                        <div style="text-align:center;color:var(--muted);padding:24px;">جاري الاتصال بقاعدة البيانات الحية...</div>
+                        <div style="text-align:center;color:var(--muted);padding:24px;">جاري الاتصال بقاعدة البيانات...</div>
                     </div>
                 </div>
             </div>
@@ -166,14 +180,14 @@
             <!-- 2. تبويب إدارة المنتجات -->
             <div id="productsTab" class="tab-pane">
                 <div class="panel">
-                    <h3 id="prodFormHeading" style="margin:0 0 16px;color:var(--primary);">➕ إضافة منتج / ملزمة جديدة</h3>
+                    <h3 id="prodFormHeading" style="margin:0 0 16px;color:var(--primary);"><i class="fas fa-plus-circle"></i> إضافة منتج / ملزمة جديدة</h3>
                     <input type="hidden" id="editProdIdx" value="-1">
                     <div class="form-grid" style="margin-bottom:12px;">
                         <input type="text" id="pName" placeholder="اسم المنتج أو الملزمة *">
                         <input type="number" id="pPrice" placeholder="السعر الحالي (د.ع) *">
                         <input type="number" id="pOldPrice" placeholder="السعر قبل الخصم (اختياري)">
                         <select id="pCat">
-                            <option value="ملازم دراسية">ملازم دراسية</option>
+                            <option value="ملازم">ملازم دراسية</option>
                             <option value="قرطاسية">قرطاسية</option>
                             <option value="مستلزمات مدرسية">مستلزمات مدرسية</option>
                             <option value="مستلزمات مكتبية">مستلزمات مكتبية</option>
@@ -184,20 +198,20 @@
                     </div>
                     <div class="form-grid" style="margin-bottom:12px;">
                         <input type="text" id="pColors" placeholder="الألوان أو الخيارات (مثال: أزرق، أسود، أحمر)">
-                        <input type="text" id="pImgUrl" placeholder="رابط الصورة أو ارفعها من الزر المجاور">
+                        <input type="text" id="pImgUrl" placeholder="رابط الصورة أو ارفعها من جهازك">
                         <input type="file" id="pFileInput" accept="image/*" onchange="compressProductImg(event)">
                     </div>
                     <textarea id="pDesc" rows="2" placeholder="وصف وتفاصيل المنتج..." style="margin-bottom:12px;"></textarea>
                     <div style="display:flex;gap:10px;">
-                        <button class="btn" onclick="saveProduct()">💾 حفظ المنتج</button>
+                        <button class="btn" onclick="saveProduct()"><i class="fas fa-save"></i> حفظ ونشر في المتجر فوراً</button>
                         <button class="btn btn-dark" id="cancelEditBtn" style="display:none;" onclick="resetProdForm()">إلغاء التعديل</button>
                     </div>
                 </div>
 
                 <div class="panel">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-                        <h3 style="margin:0;">📋 جميع المنتجات في المتجر</h3>
-                        <input type="text" id="prodSearch" placeholder="🔍 ابحث بالاسم أو القسم..." style="max-width:280px;" oninput="renderProductsAdmin()">
+                        <h3 style="margin:0;"><i class="fas fa-list"></i> جميع المنتجات في المتجر</h3>
+                        <input type="text" id="prodSearch" placeholder="ابحث بالاسم أو القسم..." style="max-width:280px;" oninput="renderProductsAdmin()">
                     </div>
                     <div id="adminProductsContainer"></div>
                 </div>
@@ -206,51 +220,51 @@
             <!-- 3. تبويب بوليصة الشحن -->
             <div id="shippingTab" class="tab-pane">
                 <div class="panel" style="max-width:540px;">
-                    <h3 style="margin:0 0 14px;color:#fbbf24;">🏷️ طباعة ملصق التوصيل الحراري (Waybill)</h3>
+                    <h3 style="margin:0 0 14px;color:#fbbf24;"><i class="fas fa-print"></i> طباعة ملصق التوصيل الحراري (Waybill)</h3>
                     <div style="display:flex;flex-direction:column;gap:12px;">
                         <input type="text" id="wName" placeholder="اسم المستلم">
                         <input type="text" id="wPhone" placeholder="رقم هاتف المستلم">
                         <input type="text" id="wAddr" placeholder="المحافظة والمنطقة ونقطة دالة">
                         <input type="number" id="wAmount" placeholder="المبلغ المطلوب استلامه (د.ع)">
                         <textarea id="wNotes" rows="2" placeholder="ملاحظات للمندوب"></textarea>
-                        <button class="btn" onclick="printManualWaybill()">🖨️ معاينة وطباعة وصل الشحن الآن</button>
+                        <button class="btn" onclick="printManualWaybill()"><i class="fas fa-print"></i> معاينة وطباعة وصل الشحن</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 4. تبويب التسويق والكوبونات -->
+            <!-- 4. تبويب التسويق -->
             <div id="marketingTab" class="tab-pane">
                 <div class="form-grid">
                     <div class="panel">
-                        <h3 style="margin:0 0 14px;color:var(--primary);">📸 صانع بطاقة إعلان ستوري</h3>
+                        <h3 style="margin:0 0 14px;color:var(--primary);"><i class="fas fa-image"></i> مصمم بطاقة إعلان ستوري</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
                             <input type="text" id="sTitle" placeholder="اسم الملزمة أو العرض">
                             <input type="text" id="sSub" placeholder="اسم الأستاذ أو تفاصيل إضافية">
                             <input type="text" id="sPrice" placeholder="السعر (مثال: 12,000 د.ع)">
-                            <button class="btn" onclick="generateStoryImage()">✨ تصميم وتحميل صورة الستوري</button>
+                            <button class="btn" onclick="generateStoryImage()"><i class="fas fa-download"></i> تصميم وتحميل صورة الستوري</button>
                         </div>
                     </div>
 
                     <div class="panel">
-                        <h3 style="margin:0 0 14px;color:var(--success);">🎟️ مولّد رسائل العروض للتيليغرام</h3>
+                        <h3 style="margin:0 0 14px;color:var(--success);"><i class="fas fa-paper-plane"></i> منشور إعلاني جاهز</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
                             <input type="text" id="msgOfferTitle" placeholder="عنوان العرض">
                             <textarea id="msgOfferBody" rows="3" placeholder="اكتب تفاصيل العرض هنا..."></textarea>
-                            <button class="btn btn-success" onclick="copyMarketingPost()">📋 نسخ منشور إعلاني جاهز</button>
+                            <button class="btn btn-success" onclick="copyMarketingPost()"><i class="fas fa-copy"></i> نسخ المنشور الإعلاني</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 5. تبويب النسخ الاحتياطي والجرد -->
+            <!-- 5. تبويب النسخ الاحتياطي -->
             <div id="backupTab" class="tab-pane">
                 <div class="panel">
-                    <h3 style="margin:0 0 12px;">💾 إدارة البيانات والجرد والنسخ الاحتياطي</h3>
+                    <h3 style="margin:0 0 12px;"><i class="fas fa-shield-alt"></i> إدارة البيانات والجرد والنسخ الاحتياطي</h3>
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
-                        <button class="btn btn-success" onclick="exportExcelCsv()">📊 تصدير جرد المنتجات (Excel / CSV)</button>
-                        <button class="btn btn-info" onclick="downloadJsonBackup()">📥 تحميل نسخة احتياطية (JSON)</button>
+                        <button class="btn btn-success" onclick="exportExcelCsv()"><i class="fas fa-file-excel"></i> تصدير جرد المنتجات (Excel / CSV)</button>
+                        <button class="btn btn-info" onclick="downloadJsonBackup()"><i class="fas fa-download"></i> تحميل نسخة احتياطية (JSON)</button>
                         <label class="btn btn-dark" style="cursor:pointer;">
-                            📤 استعادة نسخة احتياطية (JSON)
+                            <i class="fas fa-upload"></i> استعادة نسخة احتياطية (JSON)
                             <input type="file" accept=".json" style="display:none;" onchange="restoreJsonBackup(event)">
                         </label>
                     </div>
@@ -260,11 +274,16 @@
     </div>
 
     <script>
-                const ADMIN_HASH = '8f9e4c3b2a1d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f';
+        const FIREBASE_BASE = 'https://yassin-library-default-rtdb.firebaseio.com';
+        const DB_ORDERS_URL = FIREBASE_BASE + '/orders';
+        const DB_PRODS_URL = FIREBASE_BASE + '/products.json';
+        let lastOrderCount = -1;
+
         async function sha256(str) {
             const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
             return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
+
         async function checkAdminLogin() {
             const val = document.getElementById('adminPassInput').value;
             const hashed = await sha256('YM_SALT_' + val);
@@ -274,7 +293,7 @@
                 document.getElementById('loginScreen').style.display = 'none';
                 initAdminData();
             } else {
-                alert('❌ رمز الدخول غير صحيح!');
+                alert('رمز الدخول غير صحيح.');
             }
         }
 
@@ -293,6 +312,17 @@
         }
 
         async function initAdminData() {
+            // 1. محاولة جلب المنتجات من Firebase أولاً
+            try {
+                const cloudRes = await fetch(DB_PRODS_URL + '?t=' + Date.now());
+                const cloudData = await cloudRes.json();
+                if (Array.isArray(cloudData) && cloudData.length > 0) {
+                    localStorage.setItem('yassin_products', JSON.stringify(cloudData));
+                    localStorage.setItem('products', JSON.stringify(cloudData));
+                }
+            } catch (e) {}
+
+            // 2. إذا كانت السحابة فارغة، نرفع المنتجات المحلية الأساسية إليها تلقائياً
             let prods = getProducts();
             if (!prods.length) {
                 try {
@@ -302,10 +332,32 @@
                         saveProducts(prods, false);
                     }
                 } catch (e) {}
+            } else {
+                syncProductsToCloud(prods, false);
             }
+
             renderProductsAdmin();
             fetchLiveFirebaseOrders();
             setInterval(fetchLiveFirebaseOrders, 5000);
+        }
+
+        function syncProductsToCloud(arr, notify = false) {
+            const indicator = document.getElementById('cloudSyncIndicator');
+            if (indicator) indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المزامنة مع المتجر...';
+
+            fetch(DB_PRODS_URL, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(arr)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Sync failed');
+                if (indicator) indicator.innerHTML = '<i class="fas fa-circle" style="font-size:0.55rem;"></i> متزامن مع المتجر الحي (Firebase)';
+                if (notify) alert('تمت مزامنة جميع المنتجات مع واجهة المتجر بنجاح.');
+            })
+            .catch(() => {
+                if (indicator) indicator.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> تعذر الاتصال بالسحابة</span>';
+            });
         }
 
         function playDingSound() {
@@ -353,24 +405,24 @@
                             <div class="item-row" style="border-right:4px solid ${statusColor};">
                                 <div style="flex:1;min-width:240px;">
                                     <div style="font-weight:800;font-size:1rem;">
-                                        👤 ${o.name || 'زبون'} <span style="color:#38bdf8;font-size:0.85rem;">(${o.phone || ''})</span>
+                                        ${o.name || 'زبون'} <span style="color:#38bdf8;font-size:0.85rem;">(${o.phone || ''})</span>
                                         <span class="badge" style="background:#334155;margin-right:6px;">#${o.id || ''}</span>
                                         <span class="badge" style="background:${statusColor};color:#0f172a;">${o.status || 'جديد'}</span>
                                     </div>
-                                    <div style="font-size:0.85rem;color:#cbd5e1;margin-top:4px;">📍 <b>العنوان:</b> ${o.addr || ''} | 📅 ${o.date || ''}</div>
-                                    <div style="font-size:0.86rem;color:#f8fafc;margin-top:4px;background:#0f172a;padding:6px 10px;border-radius:8px;">📦 <b>الطلب:</b> ${o.items || ''}</div>
-                                    ${o.notes ? `<div style="font-size:0.82rem;color:#fbbf24;margin-top:4px;">📝 ملاحظة: ${o.notes}</div>` : ''}
-                                    <div style="font-size:0.92rem;color:#10b981;font-weight:800;margin-top:6px;">💰 الإجمالي: ${Number(o.total || 0).toLocaleString()} د.ع</div>
+                                    <div style="font-size:0.85rem;color:#cbd5e1;margin-top:4px;"><b>العنوان:</b> ${o.addr || ''} | ${o.date || ''}</div>
+                                    <div style="font-size:0.86rem;color:#f8fafc;margin-top:6px;background:#0f172a;padding:8px 12px;border-radius:8px;"><b>الطلب:</b> ${o.items || ''}</div>
+                                    ${o.notes ? `<div style="font-size:0.82rem;color:#fbbf24;margin-top:4px;">ملاحظة: ${o.notes}</div>` : ''}
+                                    <div style="font-size:0.92rem;color:#10b981;font-weight:800;margin-top:6px;">الإجمالي: ${Number(o.total || 0).toLocaleString()} د.ع</div>
                                 </div>
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <button class="btn" style="padding:6px 12px;font-size:0.8rem;" onclick="openWaybillWindow('${(o.name||'').replace(/'/g,'')}','${(o.phone||'').replace(/'/g,'')}','${(o.addr||'').replace(/'/g,'')}',${o.total || 0},'${o.id || ''}','')">🖨️ طباعة وصل</button>
-                                    <button class="btn btn-info" style="padding:6px 12px;font-size:0.8rem;" onclick="updateOrderStatus('${o._fbKey}','قيد التجهيز')">⚙️ قيد التجهيز</button>
-                                    <button class="btn btn-success" style="padding:6px 12px;font-size:0.8rem;" onclick="updateOrderStatus('${o._fbKey}','تم التسليم')">✅ تم التسليم</button>
-                                    <button class="btn btn-danger" style="padding:6px 12px;font-size:0.8rem;" onclick="deleteLiveOrder('${o._fbKey}')">🗑️ حذف</button>
+                                    <button class="btn" style="padding:6px 12px;font-size:0.8rem;" onclick="openWaybillWindow('${(o.name||'').replace(/'/g,'')}','${(o.phone||'').replace(/'/g,'')}','${(o.addr||'').replace(/'/g,'')}',${o.total || 0},'${o.id || ''}','')"><i class="fas fa-print"></i> طباعة وصل</button>
+                                    <button class="btn btn-info" style="padding:6px 12px;font-size:0.8rem;" onclick="updateOrderStatus('${o._fbKey}','قيد التجهيز')"><i class="fas fa-box-open"></i> قيد التجهيز</button>
+                                    <button class="btn btn-success" style="padding:6px 12px;font-size:0.8rem;" onclick="updateOrderStatus('${o._fbKey}','تم التسليم')"><i class="fas fa-check"></i> تم التسليم</button>
+                                    <button class="btn btn-danger" style="padding:6px 12px;font-size:0.8rem;" onclick="deleteLiveOrder('${o._fbKey}')"><i class="fas fa-trash"></i> حذف</button>
                                 </div>
                             </div>
                         `;
-                    }).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد طلبات واردة حتى الآن. بانتظار أول طلب من المتجر!</div>';
+                    }).join('') : '<div style="text-align:center;color:var(--muted);padding:24px;">لا توجد طلبات واردة حتى الآن.</div>';
                 })
                 .catch(() => {});
         }
@@ -397,6 +449,7 @@
         function saveProducts(arr, rerender = true) {
             localStorage.setItem('yassin_products', JSON.stringify(arr));
             localStorage.setItem('products', JSON.stringify(arr));
+            syncProductsToCloud(arr, false);
             if (rerender) renderProductsAdmin();
         }
 
@@ -415,7 +468,7 @@
 
             container.innerHTML = filtered.length ? filtered.map(({ p, idx }) => {
                 const isOut = Boolean(p.outOfStock);
-                const colors = Array.isArray(p.variants) && p.variants.length ? p.variants.join('، ') : 'بدون ألوان';
+                const colors = Array.isArray(p.variants) && p.variants.length ? p.variants.join('، ') : 'قياسي';
                 return `
                     <div class="item-row">
                         <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:220px;">
@@ -424,16 +477,16 @@
                                 <div style="font-weight:800;font-size:1rem;">${p.name}</div>
                                 <div style="font-size:0.82rem;color:#fbbf24;font-weight:700;">
                                     ${Number(p.price).toLocaleString()} د.ع
-                                    <span style="color:var(--muted);font-weight:400;"> | ${p.category || ''} | الألوان: ${colors}</span>
+                                    <span style="color:var(--muted);font-weight:400;"> | ${p.category || ''} | الخيارات: ${colors}</span>
                                 </div>
                             </div>
                         </div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap;">
                             <button class="btn ${isOut ? 'btn-danger' : 'btn-success'}" style="padding:7px 12px;font-size:0.8rem;" onclick="toggleStock(${idx})">
-                                ${isOut ? '❌ نافذ' : '✅ متوفر'}
+                                ${isOut ? 'نافذ الكمية' : 'متوفر'}
                             </button>
-                            <button class="btn btn-info" style="padding:7px 12px;font-size:0.8rem;" onclick="editProduct(${idx})">✏️ تعديل</button>
-                            <button class="btn btn-dark" style="padding:7px 12px;font-size:0.8rem;" onclick="deleteProduct(${idx})">🗑️ حذف</button>
+                            <button class="btn btn-info" style="padding:7px 12px;font-size:0.8rem;" onclick="editProduct(${idx})"><i class="fas fa-edit"></i> تعديل</button>
+                            <button class="btn btn-dark" style="padding:7px 12px;font-size:0.8rem;" onclick="deleteProduct(${idx})"><i class="fas fa-trash"></i> حذف</button>
                         </div>
                     </div>
                 `;
@@ -462,7 +515,7 @@
         function saveProduct() {
             const name = document.getElementById('pName').value.trim();
             const price = Number(document.getElementById('pPrice').value || 0);
-            if (!name || price <= 0) { alert('يرجى إدخال اسم المنتج والسعر الصحيح'); return; }
+            if (!name || price <= 0) { alert('يرجى إدخال اسم المنتج والسعر الصحيح.'); return; }
 
             const oldPrice = Number(document.getElementById('pOldPrice').value || 0);
             const category = document.getElementById('pCat').value;
@@ -487,28 +540,28 @@
 
             saveProducts(prods);
             resetProdForm();
-            alert('✅ تم حفظ المنتج بنجاح! اضغط على زر "نسخ كود المنتجات المحدث" في الأعلى لتحديث ملف data/products.json على GitHub.');
+            alert('تم حفظ المنتج ونشره في المتجر المباشر بنجاح.');
         }
 
         function editProduct(idx) {
             const p = getProducts()[idx];
             if (!p) return;
             document.getElementById('editProdIdx').value = idx;
-            document.getElementById('prodFormHeading').textContent = '✏️ تعديل المنتج: ' + p.name;
+            document.getElementById('prodFormHeading').innerHTML = '<i class="fas fa-edit"></i> تعديل المنتج: ' + p.name;
             document.getElementById('pName').value = p.name || '';
             document.getElementById('pPrice').value = p.price || '';
             document.getElementById('pOldPrice').value = p.oldPrice || '';
-            document.getElementById('pCat').value = p.category || 'ملازم دراسية';
+            document.getElementById('pCat').value = p.category || 'ملازم';
             document.getElementById('pColors').value = Array.isArray(p.variants) ? p.variants.join('، ') : '';
             document.getElementById('pDesc').value = p.desc || '';
             document.getElementById('pImgUrl').value = p.img || p.image || '';
-            document.getElementById('cancelEditBtn').style.display = 'inline-block';
+            document.getElementById('cancelEditBtn').style.display = 'inline-flex';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetProdForm() {
             document.getElementById('editProdIdx').value = '-1';
-            document.getElementById('prodFormHeading').textContent = '➕ إضافة منتج / ملزمة جديدة';
+            document.getElementById('prodFormHeading').innerHTML = '<i class="fas fa-plus-circle"></i> إضافة منتج / ملزمة جديدة';
             ['pName','pPrice','pOldPrice','pColors','pDesc','pImgUrl','pFileInput'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('cancelEditBtn').style.display = 'none';
         }
@@ -525,13 +578,6 @@
             const prods = getProducts();
             prods.splice(idx, 1);
             saveProducts(prods);
-        }
-
-        function copyProductsJson() {
-            const json = JSON.stringify(getProducts(), null, 2);
-            navigator.clipboard.writeText(json).then(() => {
-                alert('✅ تم نسخ كود المنتجات! الصقه في ملف data/products.json على GitHub.');
-            });
         }
 
         function printManualWaybill() {
@@ -557,48 +603,7 @@
                 '<p style="font-size:15px;"><b>العنوان الكامل:</b> ' + addr + '</p>',
                 notes ? '<p style="font-size:13px;"><b>ملاحظات:</b> ' + notes + '</p>' : '',
                 '<div style="background:#000;color:#fff;padding:12px;text-align:center;font-size:18px;font-weight:bold;margin-top:14px;">المبلغ المطلوب عند الاستلام: ' + Number(amount).toLocaleString() + ' د.ع</div>',
-                '<script id="ymAdminLiveProductsSync">
-(function() {
-    var DB_PRODS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/products.json';
-
-    // مزامنة المنتجات من السحابة عند فتح لوحة الإدارة
-    window.addEventListener('DOMContentLoaded', function() {
-        fetch(DB_PRODS_URL + '?t=' + Date.now())
-            .then(function(r) { return r.json(); })
-            .then(function(cloudProds) {
-                if (Array.isArray(cloudProds) && cloudProds.length > 0) {
-                    localStorage.setItem('yassin_products', JSON.stringify(cloudProds));
-                    localStorage.setItem('products', JSON.stringify(cloudProds));
-                    if (typeof renderProductsAdmin === 'function') renderProductsAdmin();
-                }
-            })
-            .catch(function() {});
-    });
-
-    // اعتراض دالة حفظ المنتجات لرفعها فوراً إلى Firebase
-    var origSaveProducts = window.saveProducts;
-    window.saveProducts = function(arr, rerender) {
-        if (typeof origSaveProducts === 'function') {
-            origSaveProducts(arr, rerender);
-        } else {
-            localStorage.setItem('yassin_products', JSON.stringify(arr));
-            localStorage.setItem('products', JSON.stringify(arr));
-        }
-        fetch(DB_PRODS_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(arr)
-        })
-        .then(function(res) {
-            if (res.ok) console.log('✅ تم نشر المنتجات في المتجر الحي فوراً!');
-        })
-        .catch(function() {
-            alert('⚠️ تم الحفظ محلياً لكن تعذر الرفع للسحابة، تأكد من الإنترنت.');
-        });
-    };
-})();
-</script>
-</body></html>'
+                '</body></html>'
             ];
             w.document.write(htmlParts.join(''));
             w.document.close();
@@ -615,15 +620,15 @@
             canvas.width = 540; canvas.height = 960;
             const ctx = canvas.getContext('2d');
             const grad = ctx.createLinearGradient(0, 0, 540, 960);
-            grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e3a8a');
+            grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e293b');
             ctx.fillStyle = grad; ctx.fillRect(0, 0, 540, 960);
 
-            ctx.fillStyle = '#f25011'; ctx.fillRect(40, 70, 460, 10);
+            ctx.fillStyle = '#f25011'; ctx.fillRect(40, 70, 460, 8);
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 34px Tahoma'; ctx.textAlign = 'center';
             ctx.fillText('مكتبة ياسين المولى', 270, 140);
 
             ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 24px Tahoma';
-            ctx.fillText('✨ متوفر الآن في المكتبة ✨', 270, 250);
+            ctx.fillText('متوفر الآن في المكتبة', 270, 250);
 
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 36px Tahoma';
             ctx.fillText(title.slice(0, 26), 270, 420);
@@ -637,7 +642,7 @@
 
             ctx.fillStyle = '#e2e8f0'; ctx.font = '22px Tahoma';
             ctx.fillText('اطلبها مباشرة عبر متجرنا الإلكتروني', 270, 770);
-            ctx.fillText('توصيل سريع لجميع محافظات العراق 🚚', 270, 815);
+            ctx.fillText('توصيل سريع لجميع محافظات العراق', 270, 815);
 
             const link = document.createElement('a');
             link.download = 'story-yassin-almawla.png';
@@ -646,10 +651,10 @@
         }
 
         function copyMarketingPost() {
-            const t = document.getElementById('msgOfferTitle').value.trim() || 'جديد مكتبة ياسين المولى 📚';
+            const t = document.getElementById('msgOfferTitle').value.trim() || 'جديد مكتبة ياسين المولى';
             const b = document.getElementById('msgOfferBody').value.trim();
-            const post = `🔥 ${t}\n\n${b}\n\n🛒 اطلبها الآن مباشرة من متجرنا الإلكتروني:\nhttps://mrgrazi94-alt.github.io/yassin-almawla-library/\n\n🚚 توصيل سريع لجميع محافظات العراق!`;
-            navigator.clipboard.writeText(post).then(() => alert('✅ تم نسخ المنشور الإعلاني بنجاح!'));
+            const post = `${t}\n\n${b}\n\nاطلبها الآن مباشرة من متجرنا الإلكتروني:\nhttps://mrgrazi94-alt.github.io/yassin-almawla-library/\n\nتوصيل سريع لجميع محافظات العراق.`;
+            navigator.clipboard.writeText(post).then(() => alert('تم نسخ المنشور الإعلاني بنجاح.'));
         }
 
         function exportExcelCsv() {
@@ -681,54 +686,11 @@
                 try {
                     const data = JSON.parse(ev.target.result);
                     if (Array.isArray(data.products)) saveProducts(data.products);
-                    alert('✅ تم استعادة النسخة الاحتياطية بنجاح!');
-                } catch (err) { alert('❌ ملف النسخة الاحتياطية غير صالح'); }
+                    alert('تم استعادة النسخة الاحتياطية ومزامنتها مع المتجر بنجاح.');
+                } catch (err) { alert('ملف النسخة الاحتياطية غير صالح.'); }
             };
             reader.readAsText(file);
         }
     </script>
-<script id="ymAdminLiveProductsSync">
-(function() {
-    var DB_PRODS_URL = 'https://yassin-library-default-rtdb.firebaseio.com/products.json';
-
-    // مزامنة المنتجات من السحابة عند فتح لوحة الإدارة
-    window.addEventListener('DOMContentLoaded', function() {
-        fetch(DB_PRODS_URL + '?t=' + Date.now())
-            .then(function(r) { return r.json(); })
-            .then(function(cloudProds) {
-                if (Array.isArray(cloudProds) && cloudProds.length > 0) {
-                    localStorage.setItem('yassin_products', JSON.stringify(cloudProds));
-                    localStorage.setItem('products', JSON.stringify(cloudProds));
-                    if (typeof renderProductsAdmin === 'function') renderProductsAdmin();
-                }
-            })
-            .catch(function() {});
-    });
-
-    // اعتراض دالة حفظ المنتجات لرفعها فوراً إلى Firebase
-    var origSaveProducts = window.saveProducts;
-    window.saveProducts = function(arr, rerender) {
-        if (typeof origSaveProducts === 'function') {
-            origSaveProducts(arr, rerender);
-        } else {
-            localStorage.setItem('yassin_products', JSON.stringify(arr));
-            localStorage.setItem('products', JSON.stringify(arr));
-        }
-        fetch(DB_PRODS_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(arr)
-        })
-        .then(function(res) {
-            if (res.ok) console.log('✅ تم نشر المنتجات في المتجر الحي فوراً!');
-        })
-        .catch(function() {
-            alert('⚠️ تم الحفظ محلياً لكن تعذر الرفع للسحابة، تأكد من الإنترنت.');
-        });
-    };
-})();
-</script>
 </body>
 </html>
-
-
